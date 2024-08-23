@@ -133,7 +133,7 @@ class ResultsCollector(core.Callback):
 
         # Calculate complexity: I(M; W)
         I_q_M_W = sum(
-        p_m[m] * q_w_m[(w, m)] * math.log((q_w_m[(w, m)] + 1e-12) / q_w[w], 2)
+        p_m[m] * q_w_m[(w, m)] * math.log2((q_w_m[(w, m)] + 1e-12) / q_w[w])
         for (w, m) in joint_counts.keys())
 
         return I_q_M_W
@@ -163,7 +163,7 @@ class ResultsCollector(core.Callback):
             dist = Categorical(logits=log_probs)
 
             # Calculate the surprisal of the target
-            surprisal = -dist.logits[0].item() / log2.item()
+            surprisal = -dist.logits[0].item() / log2.item() # was already in natural log so convert to log2
 
             # Accumulate the surprisal sum for the current target
             surprisal_sums[target] += surprisal
