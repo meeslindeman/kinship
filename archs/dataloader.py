@@ -82,7 +82,7 @@ class DataLoader(torch.utils.data.DataLoader):
         )
 
 def get_loaders(opts, dataset):
-    train_data, val_data = train_test_split(dataset, test_size=0.2, random_state=42)
-    train_loader = DataLoader(game_size=1, dataset=train_data, batch_size=opts.batch_size, shuffle=True)
+    _, val_data = train_test_split(dataset, test_size=0.2, random_state=42)
+    train_loader = DataLoader(game_size=1, dataset=dataset, batch_size=opts.batch_size, shuffle=True)
     val_loader = DataLoader(game_size=1, dataset=val_data, batch_size=opts.batch_size, shuffle=True)
     return train_loader, val_loader

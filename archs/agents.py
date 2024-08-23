@@ -3,16 +3,17 @@ import torch.nn as nn
 import torch.nn.functional as F
 from archs.network import GAT, Transform
 from archs.distractors import select_distractors
+from torch.distributions import Categorical
 
 class Sender(nn.Module):
-    def __init__(self, num_node_features, embedding_size, heads, hidden_size, temperature):
+    def __init__(self, num_node_features, embedding_size, heads, layer, hidden_size, temperature):
         super(Sender, self).__init__()
         self.num_node_features = num_node_features
         self.heads = heads
         self.hidden_size = hidden_size
         self.temp = temperature
-          
-        self.transform = Transform(self.num_node_features, embedding_size, heads) 
+        
+        self.layer = Transform(self.num_node_features, embedding_size, heads) if layer == 'transform' else GAT(self.num_node_features, embedding_size, heads)
         self.fc = nn.Linear(embedding_size, hidden_size) 
 
     def forward(self, x, _aux_input):
@@ -20,7 +21,7 @@ class Sender(nn.Module):
 
         batch_ptr, target_node_idx = data.ptr, data.target_node_idx
 
-        h = self.transform(data)
+        h = self.layer(data)
 
         adjusted_target_node_idx = target_node_idx + batch_ptr[:-1]
 
@@ -31,19 +32,19 @@ class Sender(nn.Module):
         return output.view(-1, self.hidden_size)
 
 class Receiver(nn.Module):
-    def __init__(self, num_node_features, embedding_size, heads, hidden_size, distractors):
+    def __init__(self, num_node_features, embedding_size, heads, layer, hidden_size, distractors):
         super(Receiver, self).__init__()
         self.num_node_features = num_node_features
         self.heads = heads
         self.distractors = distractors
         
-        self.transform = Transform(self.num_node_features, embedding_size, heads)
+        self.layer = Transform(self.num_node_features, embedding_size, heads) if layer == 'transform' else GAT(self.num_node_features, embedding_size, heads)
         self.fc = nn.Linear(hidden_size, embedding_size)
 
     def forward(self, message, _input, _aux_input):
         data = _aux_input
 
-        h = self.transform(data)
+        h = self.layer(data)
 
         indices, _ = select_distractors(data, self.distractors)
 
@@ -64,14 +65,14 @@ class Receiver(nn.Module):
 # =================================================================================================
 
 class SenderRel(nn.Module):
-    def __init__(self, num_node_features, embedding_size, heads, hidden_size, temperature):
+    def __init__(self, num_node_features, embedding_size, heads, layer, hidden_size, temperature):
         super(SenderRel, self).__init__()
         self.num_node_features = num_node_features
         self.heads = heads
         self.hidden_size = hidden_size
         self.temp = temperature
           
-        self.transform = Transform(self.num_node_features, embedding_size, heads) 
+        self.layer = Transform(self.num_node_features, embedding_size, heads) if layer == 'transform' else GAT(self.num_node_features, embedding_size, heads) 
         self.fc = nn.Linear(2 * embedding_size, hidden_size) 
 
     def forward(self, x, _aux_input):
@@ -79,7 +80,7 @@ class SenderRel(nn.Module):
 
         batch_ptr, target_node_idx, ego_idx = data.ptr, data.target_node_idx, data.ego_node_idx
 
-        h = self.transform(data)
+        h = self.layer(data)
 
         adjusted_ego_idx = ego_idx + batch_ptr[:-1]
         adjusted_target_node_idx = target_node_idx + batch_ptr[:-1]
@@ -91,19 +92,19 @@ class SenderRel(nn.Module):
         return output # batch_size x hidden_size
 
 class ReceiverRel(nn.Module):
-    def __init__(self, num_node_features, embedding_size, heads, hidden_size, distractors):
+    def __init__(self, num_node_features, embedding_size, heads, layer, hidden_size, distractors):
         super(ReceiverRel, self).__init__()
         self.num_node_features = num_node_features
         self.heads = heads
         self.distractors = distractors
         
-        self.transform = Transform(self.num_node_features, embedding_size, heads)
+        self.layer = Transform(self.num_node_features, embedding_size, heads) if layer == 'transform' else GAT(self.num_node_features, embedding_size, heads)
         self.fc = nn.Linear(hidden_size, embedding_size)
 
     def forward(self, message, _input, _aux_input):
         data = _aux_input
 
-        h = self.transform(data)
+        h = self.layer(data)
 
         indices, _ = select_distractors(data, self.distractors)
 
@@ -117,6 +118,9 @@ class ReceiverRel(nn.Module):
 
         dot_products = torch.bmm(embeddings, message).squeeze(-1)  
 
-        probabilities = F.log_softmax(dot_products, dim=1)
+        log_probabilities = F.log_softmax(dot_products, dim=1)
 
-        return probabilities # batch_size x (distractors + 1)
+        # logits = dot_products
+        # probabilities = F.softmax(dot_products, dim=1)
+        
+        return log_probabilities

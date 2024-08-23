@@ -1,28 +1,24 @@
-from graph.dataset import FamilyGraphDataset
-from graph.uniform_dataset import UniformFamilyGraphDataset
+from typing import Dict, Optional
+from graph.kemp_dataset import KempGraphDataset
 from options import Options
-
-"""
-This script is used to initialise the dataset and print some statistics about it.
-"""
+from need_probs import get_need_probs
 
 opts = Options()
 
-def process_dataset():
-    if opts.root == 'data/':
-        dataset = FamilyGraphDataset(root=opts.root, number_of_graphs=opts.number_of_graphs, generations=opts.generations, edges_away=opts.edges_away)
-    elif opts.root == 'data_uniform/':
-        dataset = UniformFamilyGraphDataset(root=opts.root, number_of_graphs=opts.number_of_graphs, edges_away=opts.edges_away)
-    else:
-        raise ValueError(f"Invalid root: {opts.root}")
+need_probs = get_need_probs(opts.need_probs)
+
+def process_dataset(need_probs: Optional[Dict] = None): 
+
+    dataset = KempGraphDataset(root=opts.root+opts.need_probs, number_of_graphs=opts.number_of_graphs, need_probs=need_probs)
 
     total_nodes = sum(data.num_nodes for data in dataset)
     average_nodes = total_nodes / len(dataset)
 
     return dataset, average_nodes
 
-dataset, average_nodes = process_dataset()
+dataset, average_nodes = process_dataset(need_probs=need_probs)
 
+print(f"Dataset initialized with {opts.need_probs} need probabilities.")
 print(f"Number of graphs: {len(dataset)}")
 print(f"Average number of nodes: {average_nodes}")
-print(f"Example graph: {dataset[0]}")
+print(f"Example graph: {dataset[0]}\n")

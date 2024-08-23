@@ -19,7 +19,19 @@ def results_to_dataframe(results: list[dict], opts: Options, target_folder: str,
 
     for result in results:
         if 'messages' in result:
-            result['messages'] = str(result['messages'])
+            result['messages'] = list(result['messages'])
+        if 'targets' in result:
+            result['targets'] = list(result['targets'])
+        if 'ego_nodes' in result:
+            result['ego_nodes'] = list(result['ego_nodes'])
+        if 'complexity' in result:
+            result['complexity'] = float(result['complexity'])
+        if 'entropy' in result:
+            result['entropy'] = float(result['entropy'])
+        if 'information_loss' in result:
+            result['information_loss'] = float(result['information_loss'])
+        if 'IB_bottleneck' in result:
+            result['IB_bottleneck'] = float(result['IB_bottleneck'])
             
     # Create initial DataFrame
     initial = pd.DataFrame({'mode': ['train', 'test'], 'epoch': [0, 0], 'acc': [0, 0]})
@@ -42,6 +54,6 @@ def results_to_dataframe(results: list[dict], opts: Options, target_folder: str,
     results_df['random_seed'] = int(opts.random_seed)
 
     if save:
-        results_df.to_csv(f'{target_folder}/single_dataframe_{opts.mode}.csv', index=False)
+        results_df.to_csv(f'{target_folder}/df_{opts}.csv', index=False)
 
     return results_df
