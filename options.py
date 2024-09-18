@@ -40,10 +40,6 @@ class Options:
     targets: bool = False
     ego_nodes: bool = False
     sequence: bool = False
-    complexity: bool = True
-    information_loss: bool = True
-    kl_accuracy: bool = True
-    beta: float = 1.02
 
     # Set this according to parameters in main.py
     def __str__(self):

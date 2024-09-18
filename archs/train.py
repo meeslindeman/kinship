@@ -3,7 +3,7 @@ import torch
 from options import Options
 from analysis.logger import ResultsCollector
 
-def perform_training(opts: Options, train_loader, val_loader, game):
+def perform_training(opts: Options, train_loader, val_loader, game, train_32_loader, val_32_loader):
     """
     Perform training of a game model using the specified options, train loader, validation loader, and game model.
 
@@ -21,7 +21,13 @@ def perform_training(opts: Options, train_loader, val_loader, game):
                       '--lr=1e-3',
                       '--optimizer=adam'])
     
-    callbacks = ResultsCollector(options=opts, compute_topsim_train_set=False, compute_topsim_test_set=True)
+    callbacks = ResultsCollector(options=opts, 
+                                 game=game,
+                                 train_32_loader=train_32_loader, 
+                                 val_32_loader=val_32_loader,
+                                 print_train_loss=True,
+                                 compute_topsim_train_set=True,
+                                 compute_topsim_test_set=True)
 
     optimizer = torch.optim.Adam(game.parameters())
 

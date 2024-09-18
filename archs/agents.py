@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from archs.network import GAT, Transform
 from archs.distractors import select_distractors
-from torch.distributions import Categorical
 
 class Sender(nn.Module):
     def __init__(self, num_node_features, embedding_size, heads, layer, hidden_size, temperature):
@@ -103,7 +102,6 @@ class ReceiverRel(nn.Module):
 
     def forward(self, message, _input, _aux_input):
         data = _aux_input
-
         h = self.layer(data)
 
         indices, _ = select_distractors(data, self.distractors)
@@ -119,8 +117,5 @@ class ReceiverRel(nn.Module):
         dot_products = torch.bmm(embeddings, message).squeeze(-1)  
 
         log_probabilities = F.log_softmax(dot_products, dim=1)
-
-        # logits = dot_products
-        # probabilities = F.softmax(dot_products, dim=1)
         
         return log_probabilities

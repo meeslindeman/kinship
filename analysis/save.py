@@ -26,12 +26,8 @@ def results_to_dataframe(results: list[dict], opts: Options, target_folder: str,
             result['ego_nodes'] = list(result['ego_nodes'])
         if 'complexity' in result:
             result['complexity'] = float(result['complexity'])
-        if 'entropy' in result:
-            result['entropy'] = float(result['entropy'])
         if 'information_loss' in result:
             result['information_loss'] = float(result['information_loss'])
-        if 'IB_bottleneck' in result:
-            result['IB_bottleneck'] = float(result['IB_bottleneck'])
             
     # Create initial DataFrame
     initial = pd.DataFrame({'mode': ['train', 'test'], 'epoch': [0, 0], 'acc': [0, 0]})
