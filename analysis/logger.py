@@ -5,22 +5,10 @@ import math
 from collections import Counter
 from torch.distributions import Categorical
 
-from dataclasses import dataclass
-from typing import List
-
-
 class ResultsCollector(core.Callback):
-    @dataclass
-    class EvaluationResults:
-        targets: List[int]
-        messages: List[int]
-        receiver_output: List[int]
-
-    def __init__(self, options, game, train_32_loader=None, val_32_loader=None, print_train_loss=True, compute_topsim_train_set=True, compute_topsim_test_set=True):
+    def __init__(self, options, game, print_train_loss=True, compute_topsim_train_set=True, compute_topsim_test_set=True):
         self.options = options
         self.game = game
-        self.train_32_loader = train_32_loader  
-        self.val_32_loader = val_32_loader 
         self.print_train_loss = print_train_loss
 
         self.topsim_calculator = core.TopographicSimilarity(
@@ -35,11 +23,6 @@ class ResultsCollector(core.Callback):
 
     def on_epoch_end(self, loss: float, logs: core.Interaction, epoch: int):
         train_metrics = self._aggregate_metrics(loss, logs, "train", epoch)
-
-        if self.train_32_loader is not None:
-            interaction_32 = self._evaluate_on_32_targets(self.train_32_loader)
-            info_loss_32 = self._calculate_complexity(interaction_32)
-            train_metrics['information_loss'] = info_loss_32
 
         if self.options.compute_topsim:
             topsim = self.topsim_calculator.compute_topsim(
@@ -68,8 +51,6 @@ class ResultsCollector(core.Callback):
 
         if self.val_32_loader is not None:
             interaction_32 = self._evaluate_on_32_targets(self.val_32_loader)
-            info_loss_32 = self._calculate_complexity(interaction_32)
-            test_metrics['information_loss'] = info_loss_32
 
         if self.options.compute_topsim:
             topsim = self.topsim_calculator.compute_topsim(
@@ -114,19 +95,6 @@ class ResultsCollector(core.Callback):
     def _print_to_console(self, metrics: dict):
         output_message = ", ".join([f"{k}={v}" for k, v in metrics.items()])
         print(output_message, flush=True)
-
-    def _evaluate_on_32_targets(self, loader):
-        self.game.eval()
-
-        with torch.no_grad():
-            for batch in loader:
-                _, labels, _, aux_input = batch
-                outputs = self.game(None, labels, None, aux_input)
-                targets = outputs[1].aux_input.target_node
-                messages = outputs[1].message.argmax(dim=-1).tolist()
-                receiver_output = outputs[1].receiver_output.mean(dim=1)
-
-                print(receiver_output)
 
     def get_results(self):
         return self.results
