@@ -1,7 +1,7 @@
 import os
 import logging
 from graph.kemp_dataset import KempGraphDataset
-from analysis.save import results_to_dataframe
+from analysis.save import results_to_dataframes
 from archs.game import get_game
 from archs.dataloader import get_loaders
 from archs.train import perform_training
@@ -15,11 +15,11 @@ def run_experiment(opts: Options, target_folder: str, save: bool = True):
     dataset = KempGraphDataset(root=opts.root+opts.need_probs)
     print(f"Dataset: {opts.root+opts.need_probs}")
 
-    train_loader, valid_loader = get_loaders(opts, dataset)
+    train_loader, valid_loader, eval_loader = get_loaders(opts, dataset)
     game = get_game(opts, dataset.num_node_features)
-    results, trainer = perform_training(opts, train_loader, valid_loader, game)
+    results, trainer = perform_training(opts, train_loader, valid_loader, eval_loader, game)
 
-    return results_to_dataframe(results, opts, target_folder, save=save)
+    return results_to_dataframes(results, opts, target_folder, save=save)
 
 def run_series_experiments(opts_list: List[Options], base_target_folder: str):
 

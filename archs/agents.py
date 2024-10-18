@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from archs.network import GAT, Transform
+
 from archs.distractors import select_distractors
 
 class Sender(nn.Module):
@@ -104,18 +105,25 @@ class ReceiverRel(nn.Module):
         data = _aux_input
         h = self.layer(data)
 
-        indices, _ = select_distractors(data, self.distractors)
+        indices, _ = select_distractors(
+            data, 
+            self.distractors if not getattr(data, 'evaluation', False) else len(data.target_node) - 1,
+            evaluation=getattr(data, 'evaluation', False)
+        )
 
         embeddings = h[indices]
 
+        batch_size = data.num_graphs
+        num_candidates = embeddings.size(0) // batch_size
+
+        embeddings = embeddings.view(batch_size, num_candidates, -1)
         message = self.fc(message)
-
-        embeddings = embeddings.view(data.num_graphs, (self.distractors + 1), -1)
-
         message = message.unsqueeze(2)  
 
         dot_products = torch.bmm(embeddings, message).squeeze(-1)  
-
         log_probabilities = F.log_softmax(dot_products, dim=1)
+
+        # add small random noise
+        log_probabilities = log_probabilities + 1e-10 * torch.randn_like(log_probabilities)
         
         return log_probabilities

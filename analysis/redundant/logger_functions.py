@@ -76,3 +76,18 @@ def _calculate_information_loss(self, logs: core.Interaction):
     information_loss = sum(need_probabilities[target] * avg_surprisal[target] for target in need_probabilities)
     
     return information_loss
+
+        # self.topsim_calculator = core.TopographicSimilarity(
+        #     sender_input_distance_fn="edit", 
+        #     message_distance_fn="edit", 
+        #     compute_topsim_train_set=compute_topsim_train_set, 
+        #     compute_topsim_test_set=compute_topsim_test_set, 
+        #     is_gumbel=True
+        # )
+
+        # if self.options.compute_topsim:
+        #     topsim = self.topsim_calculator.compute_topsim(
+        #         torch.flatten(logs.sender_input, start_dim=1), 
+        #         logs.message.argmax(dim=-1) if self.topsim_calculator.is_gumbel else logs.message
+        #     )
+        #     train_metrics["topsim"] = topsim  

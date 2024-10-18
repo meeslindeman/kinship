@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import torch
 
 @dataclass
 class Options:
@@ -8,14 +9,14 @@ class Options:
 
     # Data
     root: str = 'data/' 
-    need_probs: str = 'dutch' # 'uniform', 'kemp', 'dutch
+    need_probs: str = 'uniform' # 'uniform', 'kemp', 'dutch -> see need prob plots
     number_of_graphs: int = 5000 # default: 3200
-    generations: int = 3 # default: 3
-    padding_len: int = 80 # Only used for old sequence generation
-    edges_away: int = 3 # default: 2
+    generations: int = 3 # Depricated: used for random graph generation
+    padding_len: int = 80 # Depricated: used for topsim sequence generation
+    edges_away: int = 3 # Depricated: used for random graph generation
     
     # Game
-    distractors: int = 1 # default: 5
+    distractors: int = 20 # default: 5
     set_up: str = 'relationship' # 'single', 'relationship'
     mode: str = 'gs' # 'gs', 'rf' (also set in arguments command line)
 
@@ -25,21 +26,27 @@ class Options:
     hidden_size: int = 20 # default: 20
     sender_cell: str = 'gru' # 'rnn', 'gru', 'lstm'
     layer: str = 'gat' # 'gat', 'transformer'
-    max_len: int = 2 # default: 4
+    max_len: int = 1 # default: 1
     gs_tau: float = 1.0 # default: 1.0
 
     # Training
     n_epochs: int = 100
-    vocab_size: int = 8
-    batch_size: int = 25
+    vocab_size: int = 100
+    batch_size: int = 100
     random_seed: int = 42
 
     # Logging
     compute_topsim: bool = False
-    messages: bool = False
-    targets: bool = False
+    messages: bool = True
     ego_nodes: bool = False
     sequence: bool = False
+
+    # Evaluation
+    evaluation: bool = True
+    eval_distractors: int = None
+    eval_batch_size: int = 1
+    evaluation_interval: int = 5
+    device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # Set this according to parameters in main.py
     def __str__(self):

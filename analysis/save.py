@@ -2,40 +2,74 @@ import json
 import pandas as pd
 from options import Options
 
-def results_to_dataframe(results: list[dict], opts: Options, target_folder: str, save: bool = True) -> pd.DataFrame:
+import pandas as pd
+from options import Options
+
+def results_to_dataframes(results: list, opts: Options, target_folder: str, save: bool = True):
+    # Extract parameters
+    params = {
+        'distractors': int(opts.distractors),
+        'vocab_size': int(opts.vocab_size),
+        'hidden_size': int(opts.hidden_size),
+        'n_epochs': int(opts.n_epochs),
+        'embedding_size': int(opts.embedding_size),
+        'heads': int(opts.heads),
+        'max_len': int(opts.max_len),
+        'sender_cell': str(opts.sender_cell),
+        'train_method': str(opts.mode),
+        'batch_size': int(opts.batch_size),
+        'random_seed': int(opts.random_seed)
+    }
+
+    # Initialize lists for dataframes
+    metrics = []
+    evaluation = []
+    counts = []
+
     for result in results:
-        if 'messages' in result:
-            result['messages'] = list(result['messages'])
-        if 'targets' in result:
-            result['targets'] = list(result['targets'])
-        if 'ego_nodes' in result:
-            result['ego_nodes'] = list(result['ego_nodes'])
-        if 'complexity' in result:
-            result['complexity'] = float(result['complexity'])
-        if 'information_loss' in result:
-            result['information_loss'] = float(result['information_loss'])
-            
-    # Create initial DataFrame
-    initial = pd.DataFrame({'mode': ['train', 'test'], 'epoch': [0, 0], 'acc': [0, 0]})
+        if 'message_counts' in result:
+            epoch = result['epoch']
+            message_counts = result['message_counts']
 
-    # Convert results to DataFrame
-    results_df = pd.DataFrame(results)
-    results_df = pd.concat([initial, results_df], ignore_index=True)
+            for target, messages in message_counts.items():
+                for message, count in messages.items():
+                    counts.append({
+                        'epoch': epoch,
+                        'target': target,
+                        'message': message,
+                        'count': count
+                    })
 
-    # Add additional columns from opts
-    results_df['distractors'] = int(opts.distractors)
-    results_df['vocab_size'] = int(opts.vocab_size)
-    results_df['hidden_size'] = int(opts.hidden_size)
-    results_df['n_epochs'] = int(opts.n_epochs)
-    results_df['embedding_size'] = int(opts.embedding_size)
-    results_df['heads'] = int(opts.heads)
-    results_df['max_len'] = int(opts.max_len)
-    results_df['sender_cell'] = str(opts.sender_cell)
-    results_df['train_method'] = str(opts.mode)
-    results_df['batch_size'] = int(opts.batch_size)
-    results_df['random_seed'] = int(opts.random_seed)
+        if 'evaluation' in result:
+            for eval_item in result['evaluation']:
+                evaluation.append({
+                    'Epoch': eval_item.get('epoch'),
+                    'Target Node': eval_item.get('target_node'),
+                    'Message': eval_item.get('message'),  # Could be a list or array
+                    'Receiver Output': eval_item.get('receiver_output'),  # Long list of outputs
+                    'Predicted Label': eval_item.get('predicted_label'),
+                    'Correct': eval_item.get('correct')
+                })
 
+        metrics.append({
+            'epoch': result['epoch'],
+            'mode': result['mode'],
+            'loss': result['loss'],
+            **{k: v for k, v in result.items() if k not in ['epoch', 'mode', 'loss', 'message_counts', 'evaluation']}
+        })
+
+
+    metrics_df = pd.DataFrame(metrics)
+    evaluation_df = pd.DataFrame(evaluation)
+    counts_df = pd.DataFrame(counts)
+
+    for key, value in params.items():
+        metrics_df[key] = value
+
+    # Save DataFrames
     if save:
-        results_df.to_csv(f'{target_folder}/df_{opts}.csv', index=False)
+        metrics_df.to_csv(f'{target_folder}/metrics.csv', index=False)
+        counts_df.to_csv(f'{target_folder}/counts.csv', index=False)
+        evaluation_df.to_csv(f'{target_folder}/evaluation.csv', index=False)
 
-    return results_df
+    return None
