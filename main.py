@@ -21,7 +21,7 @@ def run_experiments(options_input):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run experiments based on the provided options.')
-    parser.add_argument('--mode', type=str, choices=['rf', 'gs'], default='gs', help='Set training mode (gs or rf)')
+    parser.add_argument('--mode', type=str, choices=['continuous', 'rf', 'gs'], default='gs', help='Set training mode (gs or rf)')
     parser.add_argument('--single', action='store_true', help='Run a single experiment')
 
     args = parser.parse_args()

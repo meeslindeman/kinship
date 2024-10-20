@@ -1,7 +1,15 @@
 import egg.core as core
 import torch.nn.functional as F
 import torch
-from archs.agents import Sender, Receiver, SenderRel, ReceiverRel
+from archs.agents import (
+    Sender, Receiver,
+    SenderRel, ReceiverRel
+)
+from archs.lexicon_agent_wrapper import (
+    LexiconSenderWrapper, LexiconReceiverWrapper,
+    LexiconSenderReceiverRF,
+    LexiconSenderReceiverGS
+)
 from options import Options
 
 def get_game(opts: Options, num_node_features: int):
@@ -15,66 +23,56 @@ def get_game(opts: Options, num_node_features: int):
         return nll, {"acc": acc}
 
     if opts.set_up == 'single':
-        sender = Sender(num_node_features=num_node_features, 
-                        embedding_size=opts.embedding_size, 
-                        heads=opts.heads, 
-                        layer=opts.layer, 
-                        hidden_size=opts.hidden_size, 
-                        temperature=opts.gs_tau) 
-        
-        receiver = Receiver(num_node_features=num_node_features, 
-                            embedding_size=opts.embedding_size, 
-                            heads=opts.heads, layer=opts.layer, 
-                            hidden_size=opts.hidden_size, 
+        sender = Sender(num_node_features=num_node_features,
+                        embedding_size=opts.embedding_size,
+                        heads=opts.heads,
+                        layer=opts.layer,
+                        hidden_size=opts.hidden_size,
+                        temperature=opts.gs_tau)
+
+        receiver = Receiver(num_node_features=num_node_features,
+                            embedding_size=opts.embedding_size,
+                            heads=opts.heads, layer=opts.layer,
+                            hidden_size=opts.hidden_size,
                             distractors=opts.distractors)
 
     elif opts.set_up == 'relationship':
-        sender = SenderRel(num_node_features=num_node_features, 
-                           embedding_size=opts.embedding_size, 
-                           heads=opts.heads, layer=opts.layer, 
-                           hidden_size=opts.hidden_size, 
-                           temperature=opts.gs_tau) 
-        
-        receiver = ReceiverRel(num_node_features=num_node_features, 
-                               embedding_size=opts.embedding_size, 
-                               heads=opts.heads, layer=opts.layer, 
-                               hidden_size=opts.hidden_size, 
+        sender = SenderRel(num_node_features=num_node_features,
+                           embedding_size=opts.embedding_size,
+                           heads=opts.heads, layer=opts.layer,
+                           hidden_size=opts.hidden_size,
+                           temperature=opts.gs_tau)
+
+        receiver = ReceiverRel(num_node_features=num_node_features,
+                               embedding_size=opts.embedding_size,
+                               heads=opts.heads, layer=opts.layer,
+                               hidden_size=opts.hidden_size,
                                distractors=opts.distractors)
     else:
         raise ValueError(f"Invalid set_up: {opts.set_up}")
 
-    if opts.mode == 'gs':
-        sender_gs = core.RnnSenderGS(sender, 
-                                    opts.vocab_size, 
-                                    opts.embedding_size, 
-                                    opts.hidden_size, 
-                                    max_len=opts.max_len, 
-                                    temperature=opts.gs_tau, 
-                                    cell=opts.sender_cell)
-        
-        receiver_gs = core.RnnReceiverGS(receiver, 
-                                        opts.vocab_size, 
-                                        opts.embedding_size, 
-                                        opts.hidden_size, 
-                                        cell=opts.sender_cell)
-        
-        game = core.SenderReceiverRnnGS(sender_gs, receiver_gs, loss_nll)
+    sender_wrapper = LexiconSenderWrapper(
+        sender,
+        opts.mode,
+        opts.vocab_size, opts.hidden_size
+    )
+    receiver_wrapper = LexiconReceiverWrapper(
+        receiver,
+        opts.mode,
+        opts.vocab_size, opts.hidden_size
+    )
+
+    if opts.mode == 'continuous':
+        game = LexiconSenderReceiverGS(sender_wrapper, receiver_wrapper, loss_nll)
+
+    elif opts.mode == 'gs':
+        game = LexiconSenderReceiverGS(sender_wrapper, receiver_wrapper, loss_nll)
 
     elif opts.mode == 'rf':
-        sender_reinforce = core.RnnSenderReinforce(sender, 
-                                                opts.vocab_size, 
-                                                opts.embedding_size, 
-                                                opts.hidden_size, 
-                                                max_len=opts.max_len, 
-                                                cell=opts.sender_cell)
-        
-        receiver_reinforce = core.RnnReceiverDeterministic(receiver, 
-                                                    opts.vocab_size, 
-                                                    opts.embedding_size, 
-                                                    opts.hidden_size, 
-                                                    cell=opts.sender_cell)
-        
-        game = core.SenderReceiverRnnReinforce(sender_reinforce, receiver_reinforce, loss_nll, sender_entropy_coeff=0.01, receiver_entropy_coeff=0.01)
+        game = LexiconSenderReceiverRF(
+            sender_wrapper, receiver_wrapper, loss_nll,
+            sender_entropy_coeff=0.01, receiver_entropy_coeff=0.01
+        )
     else:
         raise ValueError(f"Invalid wrapper: {opts.wrapper}")
 

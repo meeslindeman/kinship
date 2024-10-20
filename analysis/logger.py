@@ -26,8 +26,8 @@ class ResultsCollector(core.Callback):
                 eval_logs = self.evaluate(epoch)
                 train_metrics['eval_acc'] = eval_logs['accuracy']
                 train_metrics['evaluation'] = eval_logs['evaluation']
-                train_metrics['complexity'] = self._complexity(eval_logs['evaluation'])
-                train_metrics['information_loss'] = self._information_loss(eval_logs['evaluation'])
+                train_metrics['complexity'] = 0 # self._complexity(eval_logs['evaluation'])
+                train_metrics['information_loss'] = 0 # self._information_loss(eval_logs['evaluation'])
 
             if self.options.messages:
                 messages = self._messages_to_indices(logs.message)
@@ -52,13 +52,13 @@ class ResultsCollector(core.Callback):
             "loss": loss,
             **metrics
         }
-    
+
     def _messages_to_indices(self, messages_tensor):
         if self.options.mode == "rf":
             return messages_tensor.tolist()
         else:
             return [message.argmax(dim=-1).tolist() for message in messages_tensor]
-    
+
     def _compute_message_counts(self, messages, target_nodes):
         per_target_message_counts = collections.defaultdict(collections.Counter)
         for message, target_node in zip(messages, target_nodes):
@@ -93,12 +93,7 @@ class ResultsCollector(core.Callback):
                 message = interaction.message.argmax(dim=-1).tolist()
 
                 # Get the receiver output logits and compute probabilities
-                if self.options.mode == "rf":
-                    receiver_probs = F.softmax(interaction.receiver_output, dim=-1)
-                elif self.options.mode == "gs":
-                    log_probs = interaction.receiver_output.squeeze(0)[0]
-                    receiver_dist= Categorical(logits=log_probs)
-                    receiver_probs = receiver_dist.probs
+                receiver_probs = F.softmax(interaction.receiver_output, dim=-1)
 
                 # Check if the prediction is correct
                 predicted_label = receiver_probs.argmax().item()
@@ -152,7 +147,7 @@ class ResultsCollector(core.Callback):
             })
             for target in count_msg_target.keys()
         })
-        
+
         p_target_given_message = defaultdict(lambda: defaultdict(float), {
             message: defaultdict(float, {
                 target: count_target_msg[message][target] / sum(count_target_msg[message].values())
@@ -160,7 +155,7 @@ class ResultsCollector(core.Callback):
             })
             for message in count_target_msg.keys()
         })
-        
+
         complexity = 0
         for target, message in product(targets, messages):
             complexity += (p_target[target] * p_message_given_target[target][message] *
@@ -183,13 +178,13 @@ class ResultsCollector(core.Callback):
         information_loss = 0
 
         for i, target in enumerate(targets):
-            receiver_output = log2(receiver_outputs[i][0])  
+            receiver_output = log2(receiver_outputs[i][0])
             target_prob = normalized_need_probs[target]
 
             cross_entropy = -target_prob * receiver_output
 
             information_loss += cross_entropy
-    
+
         return information_loss
 
     def get_results(self):
