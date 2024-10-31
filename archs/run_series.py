@@ -12,7 +12,7 @@ def run_experiment(opts: Options, target_folder: str, save: bool = True):
 
     logging.info(f"Running {str(opts)}")
 
-    dataset = KempGraphDataset(root=opts.root+opts.need_probs)
+    dataset = KempGraphDataset(root=opts.root+opts.need_probs, prune=opts.prune_graph)
     print(f"Dataset: {opts.root+opts.need_probs}")
 
     train_loader, valid_loader, eval_loader = get_loaders(opts, dataset)
@@ -32,5 +32,5 @@ def run_series_experiments(opts_list: List[Options], base_target_folder: str):
         result = run_experiment(opts, target_folder, False)
         filename = f"df_{str(opts)}.csv"
         result.to_csv(os.path.join(target_folder, filename), index=False)
-        
+
     return results, target_folder

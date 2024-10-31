@@ -7,12 +7,20 @@ from graph.kemp_build import get_graph, update_age, update_sex, prune_graph
 #from uniform_build import get_graph, update_age, update_sex #for drawing
 
 class KempGraphDataset(Dataset):
-    def __init__(self, root: str, number_of_graphs: int = 5000, need_probs=None, transform=None, pre_transform=None):
+    def __init__(
+        self,
+        root: str,
+        number_of_graphs: int = 5000,
+        need_probs=None,
+        transform=None,
+        pre_transform=None,
+        prune=False
+    ):
         self.number_of_graphs = number_of_graphs
         self.need_probs = need_probs
         super(KempGraphDataset, self).__init__(root, transform, pre_transform)
         self.data = None
-        self.process()
+        self.process(prune=prune)
 
     @property
     def processed_file_names(self):
@@ -63,7 +71,7 @@ class KempGraphDataset(Dataset):
         update_age(graph_data, ego_idx, node_map)
         update_sex(graph_data, ego_idx)
 
-    def process(self):
+    def process(self, prune=False):
         if True: # not os.path.isfile(self.processed_paths[0]):
             self.data = []
             for i in range(self.number_of_graphs):
@@ -83,7 +91,8 @@ class KempGraphDataset(Dataset):
 
                 # Update graph attributes based on the new ego node
                 self.update_graph_attributes(graph_data, ego_node_idx, node_map)
-                # graph_data = prune_graph(graph_data, ego_node_idx)
+                if prune:
+                    graph_data = prune_graph(graph_data, ego_node_idx)
                 graph_data.ego_node_idx = ego_node_idx
 
                 # Generate target node

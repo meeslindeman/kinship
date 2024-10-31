@@ -23,18 +23,20 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run experiments based on the provided options.')
     parser.add_argument('--mode', type=str, choices=['continuous', 'rf', 'gs'], default='gs', help='Set training mode (gs or rf)')
     parser.add_argument('--single', action='store_true', help='Run a single experiment')
+    parser.add_argument('--prune_graph', action='store_true', help='prune graph to bfs tree')
+
 
     args = parser.parse_args()
 
     if args.single:
         # Run a single experiment: set options in command line
-        single_options = Options(mode=args.mode)
+        single_options = Options(mode=args.mode, prune_graph=args.prune_graph)
         run_experiments(single_options)
     else:
         # Run multiple experiments: set __str__ in Options and labels in plot.py accordingly
         multiple_options = [
-            Options(need_probs='dutch'),
-            Options(need_probs='kemp'),
-            Options(need_probs='uniform')
+            Options(need_probs='dutch', mode=args.mode, prune_graph=args.prune_graph),
+            Options(need_probs='kemp', mode=args.mode, prune_graph=args.prune_graph),
+            Options(need_probs='uniform', mode=args.mode, prune_graph=args.prune_graph)
         ]
         run_experiments(multiple_options)
