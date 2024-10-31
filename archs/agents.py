@@ -17,14 +17,6 @@ class Sender(nn.Module):
             Transform(self.num_node_features, embedding_size, heads) if layer == 'transform'
             else GAT(self.num_node_features, embedding_size, heads)
         )
-        self.f1 = nn.Sequential(
-            nn.Linear(embedding_size, embedding_size),
-            nn.Tanh()
-        )
-        self.layer1 = (
-            Transform(embedding_size, embedding_size, heads) if layer == 'transform'
-            else GAT(embedding_size, embedding_size, heads)
-        )
         self.fc = nn.Linear(embedding_size, hidden_size)
 
     def forward(self, x, _aux_input):

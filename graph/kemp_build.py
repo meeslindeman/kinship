@@ -20,9 +20,9 @@ def get_graph():
         ('FF', 'FZy'), ('FF', 'FBy'), ('FF', 'F'), ('FF', 'FZe'), ('FF', 'FBe'),
         ('M', 'Ego'), ('M', 'Ze'), ('M', 'Be'), ('M', 'Zy'), ('M', 'By'),
         ('F', 'Ego'), ('F', 'Ze'), ('F', 'Be'), ('F', 'Zy'), ('F', 'By'),
-        ('Ego', 'D'), ('Ego', 'S'), 
+        ('Ego', 'D'), ('Ego', 'S'),
         ('Zy', 'ZyD'), ('Zy', 'ZyS'), ('By', 'ByD'), ('By', 'ByS'),
-        ('Ze', 'ZeD'), ('Ze', 'ZeS'), ('Be', 'BeD'), ('Be', 'BeS'), 
+        ('Ze', 'ZeD'), ('Ze', 'ZeS'), ('Be', 'BeD'), ('Be', 'BeS'),
         ('D', 'DD'), ('D', 'DS'), ('S', 'SD'), ('S', 'SS')
     ]
     # Define initial characteristics for each node: [Gender, Age, SameSex]
@@ -59,6 +59,65 @@ def get_graph():
 
     return data, node_map
 
+def prune_graph(data, ego_idx):
+    """ prune the graph to its bfs-tree rooting at ego node
+    """
+    from torch_geometric.utils import to_networkx, from_networkx
+    import networkx as nx
+
+    def convert_to_networkx_with_attrs(data):
+        # Convert to NetworkX graph
+        G = to_networkx(data, to_undirected=False, node_attrs=["x"], edge_attrs=["edge_attr"])
+
+        # If attributes were not included by `to_networkx`, add them manually
+        for i in range(data.num_nodes):
+            G.nodes[i]['x'] = data.x[i].tolist()
+        for i, (u, v) in enumerate(data.edge_index.T):
+            G.edges[u.item(), v.item()]['edge_attr'] = data.edge_attr[i].tolist()
+
+        return G
+
+    def convert_networkx_to_torch_geometric(G):
+        # Get the edge_index tensor
+        edge_index = torch.tensor(list(G.edges)).t().contiguous()
+
+        # Collect node attributes (assuming each node has the same set of attributes)
+        if G.nodes:
+            node_attr = []
+            for _, attrs in G.nodes(data=True):
+                node_attr.append(attrs['x'])
+            x = torch.tensor(node_attr, dtype=torch.float)
+        else:
+            x = None  # No node attributes available
+
+        # Collect edge attributes (assuming each edge has the same set of attributes)
+        if G.edges:
+            edge_attr = []
+            for _, _, attrs in G.edges(data=True):
+                edge_attr.append(attrs['edge_attr'])
+            edge_attr = torch.tensor(edge_attr, dtype=torch.float)
+        else:
+            edge_attr = None  # No edge attributes available
+
+        # Create PyTorch Geometric Data object
+        data = Data(x=x, edge_index=edge_index, edge_attr=edge_attr)
+
+        return data
+
+    G = convert_to_networkx_with_attrs(data)
+
+    bfs_tree = nx.bfs_tree(G, source=ego_idx)
+    for node in bfs_tree.nodes:
+        if node in G.nodes:
+            bfs_tree.nodes[node].update(G.nodes[node])  # Copy node attributes
+    for edge in bfs_tree.edges:
+        if edge in G.edges:
+            bfs_tree.edges[edge].update(G.edges[edge])  # Copy edge attributes
+
+    pruned_data = convert_networkx_to_torch_geometric(bfs_tree)
+    return pruned_data
+
+
 def update_age(data, _, node_map):
     # Define the age map directly
     age_map = {
@@ -82,3 +141,4 @@ def update_sex(data, ego_idx):
             data.x[idx][2] = 1  # Same sex
         else:  # Different gender from ego
             data.x[idx][2] = 0  # Different sex
+

@@ -143,10 +143,11 @@ class LexiconSenderReceiverGS(nn.Module):
         self.warm_up = True
 
     def forward(self, sender_input, labels, receiver_input=None, aux_input=None):
-        if self.count == 10000:
-            self.warm_up = False
-            print('finetune')
-        self.count += 1
+        # if self.count == 10000:
+        #     self.warm_up = False
+        #     print('finetune')
+        # self.count += 1
+        self.warm_up = False
 
         message = self.sender(sender_input, aux_input, warm_up=self.warm_up)
         receiver_output = self.receiver(message, receiver_input, aux_input, warm_up=self.warm_up)

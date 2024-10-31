@@ -21,8 +21,8 @@ class Options:
     mode: str = 'gs' # 'gs', 'rf' (also set in arguments command line)
 
     # Agents
-    embedding_size: int = 20 # default: 10
-    heads: int = 4 # default: 4
+    embedding_size: int = 80 # default: 10
+    heads: int = 1 # default: 4
     hidden_size: int = 50 # default: 20
     sender_cell: str = 'gru' # 'rnn', 'gru', 'lstm'
     layer: str = 'gat' # 'gat', 'transformer'
