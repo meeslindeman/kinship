@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from archs.network import GAT, Transform
 
-from archs.distractors import select_distractors
+from archs.distractors import select_distractors, select_fixed_distractors
 
 class Sender(nn.Module):
     def __init__(self, num_node_features, embedding_size, heads, layer, hidden_size, temperature):
@@ -105,7 +105,15 @@ class ReceiverRel(nn.Module):
         data = _aux_input
         h = self.layer(data)
 
-        indices, _ = select_distractors(
+        print(data.ego_node_idx)
+        print(data.ego_node)
+        # indices, _ = select_distractors(
+        #     data, 
+        #     self.distractors if not getattr(data, 'evaluation', False) else len(data.target_node) - 1,
+        #     evaluation=getattr(data, 'evaluation', False)
+        # )
+
+        indices, _ = select_fixed_distractors(
             data, 
             self.distractors if not getattr(data, 'evaluation', False) else len(data.target_node) - 1,
             evaluation=getattr(data, 'evaluation', False)

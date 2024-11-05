@@ -16,6 +16,7 @@ class Options:
     edges_away: int = 3 # Depricated: used for random graph generation
     
     # Game
+    dist_type: str = 'fixed' # 'random', 'fixed'
     distractors: int = 20 # default: 5
     set_up: str = 'relationship' # 'single', 'relationship'
     mode: str = 'gs' # 'gs', 'rf' (also set in arguments command line)
@@ -32,7 +33,7 @@ class Options:
     # Training
     n_epochs: int = 100
     vocab_size: int = 100
-    batch_size: int = 100
+    batch_size: int = 1
     random_seed: int = 42
 
     # Logging
