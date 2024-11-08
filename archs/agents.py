@@ -113,10 +113,18 @@ class ReceiverRel(nn.Module):
         message = message.unsqueeze(2)
 
         dot_products = torch.bmm(embeddings, message).squeeze(-1)
+
+        # break tie
+        diff = dot_products.abs() - dot_products.abs().max()
+        eps = (diff < 1e-10).float() * dot_products.abs().max() * 1e-5 * torch.randn_like(dot_products)
+        dot_products = dot_products + eps
         log_probabilities = F.log_softmax(dot_products, dim=1)
 
-        # add small random noise
-        log_probabilities = log_probabilities + 1e-10 * torch.randn_like(log_probabilities)
+        if True: # not self.training:
+            diff = (log_probabilities - log_probabilities.max()).abs()
+            diff = (diff < 1e-10).float().sum(-1).mean().item()
+            if diff > 1:
+                print(diff)
 
         return log_probabilities
 

@@ -70,10 +70,12 @@ def prune_graph(data, ego_idx):
         G = to_networkx(data, to_undirected=False, node_attrs=["x"], edge_attrs=["edge_attr"])
 
         # If attributes were not included by `to_networkx`, add them manually
-        for i in range(data.num_nodes):
-            G.nodes[i]['x'] = data.x[i].tolist()
-        for i, (u, v) in enumerate(data.edge_index.T):
-            G.edges[u.item(), v.item()]['edge_attr'] = data.edge_attr[i].tolist()
+        if not G.nodes:
+            for i in range(data.num_nodes):
+                G.nodes[i]['x'] = data.x[i].tolist()
+        if not G.edges:
+            for i, (u, v) in enumerate(data.edge_index.T):
+                G.edges[u.item(), v.item()]['edge_attr'] = data.edge_attr[i].tolist()
 
         return G
 
@@ -83,9 +85,9 @@ def prune_graph(data, ego_idx):
 
         # Collect node attributes (assuming each node has the same set of attributes)
         if G.nodes:
-            node_attr = []
-            for _, attrs in G.nodes(data=True):
-                node_attr.append(attrs['x'])
+            node_attr = [None] * len(G.nodes)
+            for nid, attrs in G.nodes(data=True):
+                node_attr[nid] = attrs['x']
             x = torch.tensor(node_attr, dtype=torch.float)
         else:
             x = None  # No node attributes available
@@ -114,7 +116,16 @@ def prune_graph(data, ego_idx):
         if edge in G.edges:
             bfs_tree.edges[edge].update(G.edges[edge])  # Copy edge attributes
 
+
     pruned_data = convert_networkx_to_torch_geometric(bfs_tree)
+
+    # # sanaty check: make sure that the node attr and edge attr are preserved correctly
+    # assert (data.x - pruned_data.x).sum().item() == 0
+    # edge_idx = {tuple(data.edge_index[:,i].tolist()):i for i in range(data.edge_index.shape[1])}
+    # for peid in range(pruned_data.edge_index.shape[1]):
+    #     e = tuple(pruned_data.edge_index[:, peid].tolist())
+    #     eid = edge_idx[e]
+    #     assert (pruned_data.edge_attr[peid] - data.edge_attr[eid]).sum().item() == 0
     return pruned_data
 
 

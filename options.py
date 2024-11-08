@@ -17,7 +17,7 @@ class Options:
     prune_graph: bool = False # True for pruning graph to bfs tree (keep only paths from ego to other nodes)
 
     # Game
-    distractors: int = 20 # default: 5
+    distractors: int = 30 # default: 5
     set_up: str = 'relationship' # 'single', 'relationship'
     mode: str = 'gs' # 'gs', 'rf' (also set in arguments command line)
 

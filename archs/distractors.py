@@ -17,7 +17,7 @@ def select_distractors(data, n_distractors, evaluation=False):
         ego_node = ego_list[idx]
 
         graph_nodes = [node for node in range(graph_start, graph_end) if node != target_node and node != ego_node]
-        
+
         if evaluation:
             random.shuffle(graph_nodes)
             dist = graph_nodes
