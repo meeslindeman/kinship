@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from archs.network import GAT, Transform
 
-from archs.distractors import select_distractors
+from archs.distractors import select_distractors, select_fixed_distractors
 
 class Sender(nn.Module):
     def __init__(self, num_node_features, embedding_size, heads, layer, hidden_size, temperature):
