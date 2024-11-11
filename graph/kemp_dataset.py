@@ -4,7 +4,6 @@ import random
 import numpy as np
 from torch_geometric.data import Dataset
 from graph.kemp_build import get_graph, update_age, update_sex 
-#from uniform_build import get_graph, update_age, update_sex #for drawing
 
 class KempGraphDataset(Dataset):
     def __init__(self, root: str, number_of_graphs: int = 5000, need_probs=None, transform=None, pre_transform=None):
