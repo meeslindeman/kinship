@@ -26,8 +26,8 @@ class ResultsCollector(core.Callback):
                 eval_logs = self.evaluate(epoch)
                 train_metrics['eval_acc'] = eval_logs['accuracy']
                 train_metrics['evaluation'] = eval_logs['evaluation']
-                train_metrics['complexity'] = 0 # self._complexity(eval_logs['evaluation'])
-                train_metrics['information_loss'] = 0 # self._information_loss(eval_logs['evaluation'])
+                # train_metrics['complexity'] = self._complexity(eval_logs['evaluation'])
+                # train_metrics['information_loss'] = self._information_loss(eval_logs['evaluation'])
 
             if self.options.messages:
                 messages = self._messages_to_indices(logs.message)

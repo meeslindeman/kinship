@@ -2,8 +2,7 @@ import egg.core as core
 import torch.nn.functional as F
 import torch
 from archs.agents import (
-    Sender, Receiver,
-    SenderRel, ReceiverRel
+    Sender, Receiver
 )
 from archs.lexicon_agent_wrapper import (
     LexiconSenderWrapper, LexiconReceiverWrapper,
@@ -22,34 +21,8 @@ def get_game(opts: Options, num_node_features: int):
         acc = (labels == receiver_output.argmax(dim=1)).float().mean()
         return nll, {"acc": acc}
 
-    if opts.set_up == 'single':
-        sender = Sender(num_node_features=num_node_features,
-                        embedding_size=opts.embedding_size,
-                        heads=opts.heads,
-                        layer=opts.layer,
-                        hidden_size=opts.hidden_size,
-                        temperature=opts.gs_tau)
-
-        receiver = Receiver(num_node_features=num_node_features,
-                            embedding_size=opts.embedding_size,
-                            heads=opts.heads, layer=opts.layer,
-                            hidden_size=opts.hidden_size,
-                            distractors=opts.distractors)
-
-    elif opts.set_up == 'relationship':
-        sender = SenderRel(num_node_features=num_node_features,
-                           embedding_size=opts.embedding_size,
-                           heads=opts.heads, layer=opts.layer,
-                           hidden_size=opts.hidden_size,
-                           temperature=opts.gs_tau)
-
-        receiver = ReceiverRel(num_node_features=num_node_features,
-                               embedding_size=opts.embedding_size,
-                               heads=opts.heads, layer=opts.layer,
-                               hidden_size=opts.hidden_size,
-                               distractors=opts.distractors)
-    else:
-        raise ValueError(f"Invalid set_up: {opts.set_up}")
+    sender = Sender(num_node_features, opts)
+    receiver = Receiver(num_node_features, opts)
 
     sender_wrapper = LexiconSenderWrapper(
         sender,

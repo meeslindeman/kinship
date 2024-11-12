@@ -13,7 +13,7 @@ coloredlogs.install(level='INFO')
 def run_experiments(options_input):
     if isinstance(options_input, Options):
         results = run_experiment(options_input, f'results/{options_input.need_probs}')
-        plot_experiment(results, mode='both', save=False)
+        # plot_experiment(results, mode='both', save=False)
     elif isinstance(options_input, list):
         results, _ = run_series_experiments(options_input, f'results/')
     else:
@@ -23,20 +23,20 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run experiments based on the provided options.')
     parser.add_argument('--mode', type=str, choices=['continuous', 'rf', 'gs'], default='gs', help='Set training mode (gs or rf)')
     parser.add_argument('--single', action='store_true', help='Run a single experiment')
-    parser.add_argument('--prune_graph', action='store_true', help='prune graph to bfs tree')
+    parser.add_argument('--prune_graph', action='store_true', help='Prune graph to bfs tree')
+    parser.add_argument('--wandb', action='store_true', help='Log to wandb')
 
 
     args = parser.parse_args()
 
     if args.single:
         # Run a single experiment: set options in command line
-        single_options = Options(mode=args.mode, prune_graph=args.prune_graph)
+        single_options = Options(mode=args.mode, prune_graph=args.prune_graph, log_wandb=args.wandb)
         run_experiments(single_options)
     else:
         # Run multiple experiments: set __str__ in Options and labels in plot.py accordingly
         multiple_options = [
-            Options(need_probs='dutch', mode=args.mode, prune_graph=args.prune_graph),
-            Options(need_probs='kemp', mode=args.mode, prune_graph=args.prune_graph),
-            Options(need_probs='uniform', mode=args.mode, prune_graph=args.prune_graph)
+            Options(mode=args.mode, prune_graph=args.prune_graph, log_wandb=args.wandb),
+            Options(mode=args.mode, prune_graph=args.prune_graph, log_wandb=args.wandb, with_vq=True),
         ]
         run_experiments(multiple_options)

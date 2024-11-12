@@ -18,7 +18,6 @@ class Options:
 
     # Game
     distractors: int = 30 # default: 5
-    set_up: str = 'relationship' # 'single', 'relationship'
     mode: str = 'gs' # 'gs', 'rf' (also set in arguments command line)
 
     # Agents
@@ -29,24 +28,27 @@ class Options:
     layer: str = 'gat' # 'gat', 'transformer'
     max_len: int = 1 # default: 1
     gs_tau: float = 1.0 # default: 1.0
+    codebook_size: int = 512
 
     # Training
-    n_epochs: int = 1000
+    n_epochs: int = 2
     vocab_size: int = 100
     batch_size: int = 50
     random_seed: int = 42
+    with_vq: bool = True
 
     # Logging
     compute_topsim: bool = False
     messages: bool = True
     ego_nodes: bool = False
     sequence: bool = False
+    log_wandb: bool = False
 
     # Evaluation
     evaluation: bool = True
     eval_distractors: int = None
     eval_batch_size: int = 1
-    evaluation_interval: int = 5
+    evaluation_interval: int = 1
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # Set this according to parameters in main.py

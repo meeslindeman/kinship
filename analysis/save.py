@@ -18,7 +18,9 @@ def results_to_dataframes(results: list, opts: Options, target_folder: str, save
         'sender_cell': str(opts.sender_cell),
         'train_method': str(opts.mode),
         'batch_size': int(opts.batch_size),
-        'random_seed': int(opts.random_seed)
+        'random_seed': int(opts.random_seed),
+        'with_vq': bool(opts.with_vq),
+        'codebook_size': int(opts.codebook_size)
     }
 
     # Initialize lists for dataframes
@@ -72,4 +74,4 @@ def results_to_dataframes(results: list, opts: Options, target_folder: str, save
         counts_df.to_csv(f'{target_folder}/counts.csv', index=False)
         evaluation_df.to_csv(f'{target_folder}/evaluation.csv', index=False)
 
-    return None
+    return metrics_df, counts_df, evaluation_df
