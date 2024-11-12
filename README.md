@@ -17,21 +17,21 @@ After the first initialization, the dataset will be reused for subsequent runs, 
 Example Commands
 Run a Single Experiment:
 
-`python main.py --single --mode gs --wandb`
+- `python main.py --single --mode gs --wandb`
 This command runs a single experiment in Gumbel-Softmax (gs) mode and logs to W&B.
 
 Run Multiple Experiments:
 
-`python main.py --mode rf --wandb`
+- `python main.py --mode rf --wandb`
 This command runs multiple experiments in Reinforce (rf) mode with W&B logging enabled.
 Make sure to set a list of options manually in `main.py`.
 
 ## Options
 The script accepts several command-line arguments to control the experiment settings:
 
-`--mode`: Specifies the training mode (continuous, rf for Reinforce, or gs for Gumbel-Softmax). Default is gs.
-`--single`: Runs a single experiment. If not set, the script will run a series of experiments.
-`--prune_graph`: Prunes the input graph to a BFS tree.
-`--wandb`: Enables logging to Weights & Biases.
+- `--mode`: Specifies the training mode (continuous, rf for Reinforce, or gs for Gumbel-Softmax). Default is gs.
+- `--single`: Runs a single experiment. If not set, the script will run a series of experiments.
+- `--prune_graph`: Prunes the input graph to a BFS tree.
+- `--wandb`: Enables logging to Weights & Biases.
 
 Experiment configurations, including options such as `with_vq` (enabling the VQ layer), are controlled via the `Options` class.
