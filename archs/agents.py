@@ -13,6 +13,13 @@ class Sender(nn.Module):
         self.layer = Transform(num_node_features, opts.embedding_size, opts.heads) if opts.layer == 'transform' else GAT(num_node_features, opts.embedding_size, opts.heads)
         self.fc = nn.Linear(2 * opts.embedding_size, opts.hidden_size)
 
+        if opts.with_vq:
+            self.vq_layer = VectorQuantize(opts.hidden_size, 
+                                           opts.codebook_size, 
+                                           decay=0.8) 
+        else:
+            self.vq_layer = None
+        
     def forward(self, x, _aux_input, finetune: bool=False):
         data = _aux_input
         batch_ptr, target_node_idx, ego_idx = data.ptr, data.target_node_idx, data.ego_node_idx
@@ -26,6 +33,9 @@ class Sender(nn.Module):
         adjusted_target_node_idx = target_node_idx + batch_ptr[:-1]
         target_embedding = torch.cat((h[adjusted_target_node_idx], h[adjusted_ego_idx]), dim=1)
         output = self.fc(target_embedding)
+
+        if self.vq_layer is not None:
+            output, indices, comit_loss  = self.vq_layer(output)
 
         return output # batch_size x hidden_size
 

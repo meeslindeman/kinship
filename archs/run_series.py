@@ -11,6 +11,8 @@ from archs.train import perform_training
 from typing import List
 from options import Options
 
+# put wandb in function or class for readability
+
 def run_experiment(opts: Options, target_folder: str, save: bool = True):
     if opts.log_wandb:
         params = {

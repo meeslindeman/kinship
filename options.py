@@ -31,7 +31,7 @@ class Options:
     codebook_size: int = 512
 
     # Training
-    n_epochs: int = 2
+    n_epochs: int = 10
     vocab_size: int = 100
     batch_size: int = 50
     random_seed: int = 42
