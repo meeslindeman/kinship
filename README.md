@@ -2,19 +2,17 @@
 Language emergence project using graph neural networks.
 
 ## Usage
-Running Experiments
+#### Running Experiments
 Use `main.py` to run experiments with various configurations. You can either run a single experiment or a series of experiments.
 
-Automatic Dataset Initialization
 The dataset will be automatically initialized if it doesn’t exist. This process is managed by main.py and does not require additional steps from the user.
 
 When the dataset is created:
 
 You’ll see a message indicating that the dataset is being initialized.
-Basic statistics (e.g., the number of graphs and average nodes per graph) will be printed.
 After the first initialization, the dataset will be reused for subsequent runs, unless manually deleted.
 
-Example Commands
+#### Example Commands
 Run a Single Experiment:
 
 - `python main.py --single --mode gs --wandb`
