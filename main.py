@@ -2,6 +2,7 @@ import argparse
 import logging
 import coloredlogs
 from options import Options
+from init import initialize_dataset_if_needed
 from archs.run_series import run_experiment, run_series_experiments
 from analysis.plot import plot_experiment
 from analysis.timer import timer
@@ -26,13 +27,15 @@ if __name__ == "__main__":
     parser.add_argument('--prune_graph', action='store_true', help='Prune graph to bfs tree')
     parser.add_argument('--wandb', action='store_true', help='Log to wandb')
 
-
     args = parser.parse_args()
+
+    opts = Options(mode=args.mode, prune_graph=args.prune_graph, log_wandb=args.wandb)
+
+    initialize_dataset_if_needed(opts)
 
     if args.single:
         # Run a single experiment: set options in command line
-        single_options = Options(mode=args.mode, prune_graph=args.prune_graph, log_wandb=args.wandb)
-        run_experiments(single_options)
+        run_experiments(opts)
     else:
         # Run multiple experiments: set __str__ in Options and labels in plot.py accordingly
         multiple_options = [
