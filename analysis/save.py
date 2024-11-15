@@ -50,7 +50,9 @@ def results_to_dataframes(results: list, opts: Options, target_folder: str, save
                     'Message': eval_item.get('message'),  # Could be a list or array
                     'Receiver Output': eval_item.get('receiver_output'),  # Long list of outputs
                     'Predicted Label': eval_item.get('predicted_label'),
-                    'Correct': eval_item.get('correct')
+                    'Correct': eval_item.get('correct'),
+                    'Complexity': result.get('complexity'),
+                    'Information Loss': result.get('information_loss')
                 })
 
         metrics.append({

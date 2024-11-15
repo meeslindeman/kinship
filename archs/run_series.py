@@ -11,7 +11,7 @@ from archs.train import perform_training
 from typing import List
 from options import Options
 
-# put wandb in function or class for readability
+# WANDB FUNCTION FOR READABILITY
 
 def run_experiment(opts: Options, target_folder: str, save: bool = True):
     if opts.log_wandb:
@@ -33,7 +33,7 @@ def run_experiment(opts: Options, target_folder: str, save: bool = True):
 
         # init wandb
         wb.init(project="referential_game",
-                name=f"kinship_{opts.need_probs}_vq={opts.with_vq}",
+                name=f"{opts.need_probs}_vq={opts.with_vq}",
                 config=params,
                 settings=wb.Settings(_disable_stats=True) # disable system metrics
             )
@@ -67,44 +67,21 @@ def run_experiment(opts: Options, target_folder: str, save: bool = True):
 
             wb.log(log_data)
 
-        # message_tracker = defaultdict(lambda: defaultdict(list))
+        table = wb.Table(columns=[ "Complexity", "Information Loss", "Epoch"])
 
-        # for epoch in counts_df['epoch'].unique():
-        #     epoch_counts = counts_df[counts_df['epoch'] == epoch]
-            
-        #     for target in epoch_counts['target'].unique():
-        #         target_data = epoch_counts[epoch_counts['target'] == target]
-                
-        #         # Track each message count for this target across epochs
-        #         for _, row in target_data.iterrows():
-        #             message = int(row['message'])  # Ensure message is an integer
-        #             count = row['count']
-        #             message_tracker[target][message].append((epoch, count))
-        
-        # for target, messages in message_tracker.items():
-        #     # Prepare data for plotting
-        #     log_data = {"epoch": []}
-        #     for message, counts in messages.items():
-        #         epochs, message_counts = zip(*counts)
-        #         log_data["epoch"] = list(epochs)
-        #         log_data[f"message_{message}"] = list(message_counts)
-            
-        #     # Log a single line plot per target
-        #     wb.log({f"messages/target_{target}": wb.plot.line_series(
-        #         xs=log_data["epoch"],
-        #         ys=[log_data[f"message_{m}"] for m in messages.keys()],
-        #         keys=[f"message_{m}" for m in messages.keys()],
-        #         title=f"Message Counts for Target {target}",
-        #         xname="Epochs"
-        #     )})
-            
+        # Iterate over all epochs and accumulate data
         for epoch in evaluation_df['Epoch'].unique():
+            # Filter data for the current epoch
             epoch_data = evaluation_df[evaluation_df['Epoch'] == epoch]
-            table = wb.Table(columns=["Epoch", "Target Node", "Message"])
-            for _, row in epoch_data.iterrows():
-                table.add_data(row['Epoch'], row['Target Node'], row['Message'][0])
             
-            wb.log({f"eval_messages/epoch_{epoch}": table})
+            # Extract unique Complexity and Information Loss for the epoch
+            complexity = epoch_data['Complexity'].iloc[0]
+            info_loss = epoch_data['Information Loss'].iloc[0]
+            
+            # Add data for this epoch to the scatter plot table
+            table.add_data(complexity, info_loss, epoch)
+
+        wb.log({"eval metrics/": table})
 
         wb.finish()
 

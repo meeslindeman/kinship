@@ -18,7 +18,7 @@ class Options:
 
     # Game
     distractors: int = 30 # default: 5
-    mode: str = 'gs' # 'gs', 'rf' (also set in arguments command line)
+    mode: str = 'continuous' # 'gs', 'rf' (also set in arguments command line)
 
     # Agents
     embedding_size: int = 80 # default: 10
@@ -48,7 +48,7 @@ class Options:
     evaluation: bool = True
     eval_distractors: int = None
     eval_batch_size: int = 1
-    evaluation_interval: int = 1
+    evaluation_interval: int = 2
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # Set this according to parameters in main.py

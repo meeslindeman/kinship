@@ -4,9 +4,12 @@ from egg.core.gs_wrappers import gumbel_softmax_sample
 from typing import Optional
 from egg.core.interaction import LoggingStrategy
 import torch.nn.functional as F
+from vector_quantize_pytorch import VectorQuantize
 from torch.distributions import Categorical
 from egg.core.baselines import Baseline, MeanBaseline
 from collections import defaultdict
+
+# IMPLEMENT VQ-VAE
 
 class LexiconSenderWrapper(nn.Module):
     def __init__(
@@ -19,15 +22,19 @@ class LexiconSenderWrapper(nn.Module):
         super().__init__()
         self.agent = agent
         self.agent_type = agent_type
-        if agent_type in ['gs', 'rf']:
-            self.vocab_size = vocab_size
-            self.lex_f = nn.Linear(hidden_size, vocab_size)
+
+        self.use_vq = hasattr(agent, 'vq_layer')
+        self.vocab_size = vocab_size
+        self.lex_f = nn.Linear(hidden_size, vocab_size)
 
     def forward(self, x, aux_input=None, warm_up: bool=True):
         h = self.agent(x, aux_input, finetune=not warm_up)
 
-        if self.agent_type == 'continuous':
-            return h
+        # if self.use_vq:
+        #     quantized_output, indices, commit_loss = self.agent.vq_layer(h)
+        #     return quantized_output
+        # elif self.agent_type == 'continuous':
+        #     return h
 
         if self.agent_type == 'gs':
             lex_logit = self.lex_f(h)

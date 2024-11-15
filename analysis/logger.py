@@ -9,6 +9,9 @@ from need_probs import get_need_probs
 from collections import Counter, defaultdict
 from math import log2
 
+# FIX CALCULATIONS
+# CALCULATIONS IN DIFFERENT FILE?
+
 class ResultsCollector(core.Callback):
     def __init__(self, options, game, eval_loader, **kwargs):
         self.options = options
@@ -26,8 +29,8 @@ class ResultsCollector(core.Callback):
                 eval_logs = self.evaluate(epoch)
                 train_metrics['eval_acc'] = eval_logs['accuracy']
                 train_metrics['evaluation'] = eval_logs['evaluation']
-                # train_metrics['complexity'] = self._complexity(eval_logs['evaluation'])
-                # train_metrics['information_loss'] = self._information_loss(eval_logs['evaluation'])
+                train_metrics['complexity'] = self._complexity(eval_logs['evaluation'])
+                train_metrics['information_loss'] = self._information_loss(eval_logs['evaluation'])
 
             if self.options.messages:
                 messages = self._messages_to_indices(logs.message)
@@ -128,7 +131,7 @@ class ResultsCollector(core.Callback):
         if self.options.mode == "rf":
             messages = [tuple(element['message']) for element in counts]
         else:
-            messages = [tuple(element['message'][0]) for element in counts]
+            messages = [tuple(element['message']) for element in counts]
 
         count_target = defaultdict(float)  # for p(u) equivalent
         count_msg_target = defaultdict(lambda: defaultdict(float))  # for p(w|u)
@@ -170,7 +173,8 @@ class ResultsCollector(core.Callback):
         if self.options.mode == "rf":
             receiver_outputs = [output for element in counts for output in element['receiver_output']]
         else:
-            receiver_outputs = [element['receiver_output'] for element in counts]
+            #receiver_outputs = [element['receiver_output'] for element in counts]
+            receiver_outputs = [output for element in counts for output in element['receiver_output']]
 
         need_probs = get_need_probs('dutch')
         normalized_need_probs = {target: prob / sum(need_probs.values()) for target, prob in need_probs.items()}

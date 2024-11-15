@@ -10,15 +10,20 @@ from archs.distractors import select_distractors
 class Sender(nn.Module):
     def __init__(self, num_node_features: int, opts: Options):
         super(Sender, self).__init__()
-        self.layer = Transform(num_node_features, opts.embedding_size, opts.heads) if opts.layer == 'transform' else GAT(num_node_features, opts.embedding_size, opts.heads)
+        self.layer = (
+            Transform(num_node_features, opts.embedding_size, opts.heads)
+            if opts.layer == 'transform'
+            else GAT(num_node_features, opts.embedding_size, opts.heads)
+        )
         self.fc = nn.Linear(2 * opts.embedding_size, opts.hidden_size)
 
-        if opts.with_vq:
-            self.vq_layer = VectorQuantize(opts.hidden_size, 
-                                           opts.codebook_size, 
-                                           decay=0.8) 
-        else:
-            self.vq_layer = None
+        self.use_vq = opts.with_vq
+        if self.use_vq:
+            self.vq_layer = VectorQuantize(
+                dim=opts.hidden_size, 
+                codebook_size=opts.codebook_size, 
+                decay=0.8
+            ) 
         
     def forward(self, x, _aux_input, finetune: bool=False):
         data = _aux_input
@@ -34,8 +39,9 @@ class Sender(nn.Module):
         target_embedding = torch.cat((h[adjusted_target_node_idx], h[adjusted_ego_idx]), dim=1)
         output = self.fc(target_embedding)
 
-        if self.vq_layer is not None:
-            output, indices, comit_loss  = self.vq_layer(output)
+        if self.use_vq:
+            output, _, commit_loss = self.vq_layer(output)
+            return output
 
         return output # batch_size x hidden_size
 
@@ -43,8 +49,11 @@ class Receiver(nn.Module):
     def __init__(self, num_node_features: int, opts: Options):
         super(Receiver, self).__init__()
         self.distractors = opts.distractors
-        
-        self.layer = Transform(num_node_features, opts.embedding_size, opts.heads) if opts.layer == 'transform' else GAT(num_node_features, opts.embedding_size, opts.heads)
+        self.layer = (
+            Transform(num_node_features, opts.embedding_size, opts.heads)
+            if opts.layer == 'transform'
+            else GAT(num_node_features, opts.embedding_size, opts.heads)
+        )
         self.fc = nn.Linear(opts.hidden_size, opts.embedding_size)
 
     def forward(self, message, _input, _aux_input, finetune: bool=False):
