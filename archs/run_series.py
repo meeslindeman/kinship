@@ -33,7 +33,7 @@ def run_experiment(opts: Options, target_folder: str, save: bool = True):
 
         # init wandb
         wb.init(project="referential_game",
-                name=f"{opts.need_probs}_vq={opts.with_vq}",
+                name=f"{opts.need_probs}_vq={opts.with_vq}_{opts.mode}",
                 config=params,
                 settings=wb.Settings(_disable_stats=True) # disable system metrics
             )
@@ -80,6 +80,12 @@ def run_experiment(opts: Options, target_folder: str, save: bool = True):
             
             # Add data for this epoch to the scatter plot table
             table.add_data(complexity, info_loss, epoch)
+
+            wb.log({
+                "eval metrics/Epoch": epoch, 
+                "eval metrics/Complexity": complexity,
+                "eval metrics/Information Loss": info_loss
+            })
 
         wb.log({"eval metrics/": table})
 

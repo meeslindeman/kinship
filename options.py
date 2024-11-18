@@ -6,7 +6,6 @@ class Options:
     """
     Class representing the options for the experiment.
     """
-
     # Data
     root: str = 'data/'
     need_probs: str = 'uniform' # 'uniform', 'kemp', 'dutch -> see need prob plots
@@ -28,14 +27,14 @@ class Options:
     layer: str = 'gat' # 'gat', 'transformer'
     max_len: int = 1 # default: 1
     gs_tau: float = 1.0 # default: 1.0
-    codebook_size: int = 512
+    codebook_size: int = 100 # same as vocabsize
 
     # Training
     n_epochs: int = 10
     vocab_size: int = 100
     batch_size: int = 50
     random_seed: int = 42
-    with_vq: bool = True
+    with_vq: bool = False
 
     # Logging
     compute_topsim: bool = False

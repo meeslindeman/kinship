@@ -41,9 +41,8 @@ class Sender(nn.Module):
 
         if self.use_vq:
             output, _, commit_loss = self.vq_layer(output)
-            return output
-
-        return output # batch_size x hidden_size
+            return output, commit_loss
+        return output, None # batch_size x hidden_size
 
 class Receiver(nn.Module):
     def __init__(self, num_node_features: int, opts: Options):

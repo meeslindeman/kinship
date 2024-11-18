@@ -17,24 +17,29 @@ class LexiconSenderWrapper(nn.Module):
         agent: nn.Module,
         agent_type: str,  # continuous, gs, rf
         vocab_size: Optional[int],
-        hidden_size: Optional[int]
+        hidden_size: Optional[int],
+        with_vq: Optional[bool]
     ):
         super().__init__()
         self.agent = agent
         self.agent_type = agent_type
 
-        self.use_vq = hasattr(agent, 'vq_layer')
-        self.vocab_size = vocab_size
-        self.lex_f = nn.Linear(hidden_size, vocab_size)
+        self.with_vq = with_vq
+
+        if not self.with_vq and agent_type in ['rf', 'gs']:
+            self.vocab_size = vocab_size
+            self.lex_f = nn.Linear(hidden_size, vocab_size)
 
     def forward(self, x, aux_input=None, warm_up: bool=True):
-        h = self.agent(x, aux_input, finetune=not warm_up)
+        output = self.agent(x, aux_input, finetune=not warm_up)
 
-        # if self.use_vq:
-        #     quantized_output, indices, commit_loss = self.agent.vq_layer(h)
-        #     return quantized_output
-        # elif self.agent_type == 'continuous':
-        #     return h
+        if self.with_vq:
+            h, loss = output
+            return h, loss
+
+        h, _ = output
+        if self.agent_type == 'continuous':
+            return h
 
         if self.agent_type == 'gs':
             lex_logit = self.lex_f(h)
@@ -89,24 +94,28 @@ class LexiconSenderWrapper(nn.Module):
         else:
             not NotImplementedError()
 
-
-
 class LexiconReceiverWrapper(nn.Module):
     def __init__(
         self,
         agent: nn.Module,
         agent_type: str,  # continuous, gs, rf
         vocab_size: Optional[int],
-        hidden_size: Optional[int]
+        hidden_size: Optional[int],
+        with_vq: Optional[bool]
     ):
         super().__init__()
         self.agent = agent
         self.agent_type = agent_type
+        self.with_vq = with_vq
+
         if agent_type in ['gs', 'rf']:
             self.vocab_size = vocab_size
             self.lex_f = nn.Linear(vocab_size, hidden_size)
 
     def forward(self, message, input=None, aux_input=None, warm_up: bool=True):
+        if self.with_vq:
+            message = message[0]
+
         if self.agent_type == 'continuous':
             return self.agent(message, input, aux_input, finetune=not warm_up)
 
@@ -175,6 +184,10 @@ class LexiconSenderReceiverGS(nn.Module):
         logging_strategy = (
             self.train_logging_strategy if self.training else self.test_logging_strategy
         )
+
+        if isinstance(message, tuple):
+            message = message[0]
+
         interaction = logging_strategy.filtered_interaction(
             sender_input=sender_input,
             receiver_input=receiver_input,

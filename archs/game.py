@@ -13,13 +13,20 @@ from options import Options
 
 def get_game(opts: Options, num_node_features: int):
 
-    def loss_nll(_sender_input, _message, _receiver_input, receiver_output, labels, _aux_input):
+    def loss_nll(_sender_input, message, _receiver_input, receiver_output, labels, _aux_input):
         """
         NLL loss - differentiable and can be used with both GS and Reinforce
         """
         nll = F.nll_loss(receiver_output, labels, reduction="none")
         acc = (labels == receiver_output.argmax(dim=1)).float().mean()
-        return nll, {"acc": acc}
+
+        if isinstance(message, tuple):
+            message, commit_loss = message
+            total_loss = nll + commit_loss.mean()
+        else:
+            total_loss = nll
+
+        return total_loss, {"acc": acc}
 
     sender = Sender(num_node_features, opts)
     receiver = Receiver(num_node_features, opts)
@@ -27,12 +34,14 @@ def get_game(opts: Options, num_node_features: int):
     sender_wrapper = LexiconSenderWrapper(
         sender,
         opts.mode,
-        opts.vocab_size, opts.hidden_size
+        opts.vocab_size, opts.hidden_size,
+        opts.with_vq
     )
     receiver_wrapper = LexiconReceiverWrapper(
         receiver,
         opts.mode,
-        opts.vocab_size, opts.hidden_size
+        opts.vocab_size, opts.hidden_size, 
+        opts.with_vq
     )
 
     if opts.mode == 'continuous':
