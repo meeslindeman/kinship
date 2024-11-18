@@ -18,22 +18,19 @@ class LexiconSenderWrapper(nn.Module):
         agent_type: str,  # continuous, gs, rf
         vocab_size: Optional[int],
         hidden_size: Optional[int],
-        with_vq: Optional[bool]
     ):
         super().__init__()
         self.agent = agent
         self.agent_type = agent_type
 
-        self.with_vq = with_vq
-
-        if not self.with_vq and agent_type in ['rf', 'gs']:
+        if agent_type in ['rf', 'gs']:
             self.vocab_size = vocab_size
             self.lex_f = nn.Linear(hidden_size, vocab_size)
 
     def forward(self, x, aux_input=None, warm_up: bool=True):
         output = self.agent(x, aux_input, finetune=not warm_up)
 
-        if self.with_vq:
+        if self.agent_type == 'vq':
             h, loss = output
             return h, loss
 
@@ -101,20 +98,19 @@ class LexiconReceiverWrapper(nn.Module):
         agent_type: str,  # continuous, gs, rf
         vocab_size: Optional[int],
         hidden_size: Optional[int],
-        with_vq: Optional[bool]
     ):
         super().__init__()
         self.agent = agent
         self.agent_type = agent_type
-        self.with_vq = with_vq
 
         if agent_type in ['gs', 'rf']:
             self.vocab_size = vocab_size
             self.lex_f = nn.Linear(vocab_size, hidden_size)
 
     def forward(self, message, input=None, aux_input=None, warm_up: bool=True):
-        if self.with_vq:
+        if self.agent_type == 'vq':
             message = message[0]
+            return self.agent(message, input, aux_input, finetune=not warm_up)
 
         if self.agent_type == 'continuous':
             return self.agent(message, input, aux_input, finetune=not warm_up)
@@ -167,7 +163,6 @@ class LexiconSenderReceiverGS(nn.Module):
 
         message = self.sender(sender_input, aux_input, warm_up=self.warm_up)
         receiver_output = self.receiver(message, receiver_input, aux_input, warm_up=self.warm_up)
-
         loss, aux = self.loss(
             sender_input,
             message,
@@ -270,6 +265,7 @@ class LexiconSenderReceiverRF(nn.Module):
         logging_strategy = (
             self.train_logging_strategy if self.training else self.test_logging_strategy
         )
+
         interaction = logging_strategy.filtered_interaction(
             sender_input=sender_input,
             labels=labels,

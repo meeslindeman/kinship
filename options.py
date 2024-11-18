@@ -17,7 +17,7 @@ class Options:
 
     # Game
     distractors: int = 30 # default: 5
-    mode: str = 'continuous' # 'gs', 'rf' (also set in arguments command line)
+    mode: str = 'continuous' # 'gs', 'rf' 'vq'
 
     # Agents
     embedding_size: int = 80 # default: 10
@@ -34,7 +34,7 @@ class Options:
     vocab_size: int = 100
     batch_size: int = 50
     random_seed: int = 42
-    with_vq: bool = False
+    #with_vq: bool = True
 
     # Logging
     compute_topsim: bool = False

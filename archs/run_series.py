@@ -27,13 +27,12 @@ def run_experiment(opts: Options, target_folder: str, save: bool = True):
         'train_method': str(opts.mode),
         'batch_size': int(opts.batch_size),
         'random_seed': int(opts.random_seed),
-        'with_vq': bool(opts.with_vq),
         'codebook_size': int(opts.codebook_size)
         }
 
         # init wandb
         wb.init(project="referential_game",
-                name=f"{opts.need_probs}_vq={opts.with_vq}_{opts.mode}",
+                name=f"{opts.need_probs}_{opts.mode}",
                 config=params,
                 settings=wb.Settings(_disable_stats=True) # disable system metrics
             )

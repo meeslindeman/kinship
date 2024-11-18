@@ -93,7 +93,10 @@ class ResultsCollector(core.Callback):
                 loss, interaction = self.game.forward(sender_input, labels, receiver_input, aux_input)
 
                 # Get message
-                message = interaction.message.argmax(dim=-1).tolist()
+                if self.options.mode == "rf":
+                    message = interaction.message.tolist()
+                else:
+                    message = interaction.message.argmax(dim=-1).tolist()
 
                 # Get the receiver output logits and compute probabilities
                 receiver_probs = F.softmax(interaction.receiver_output, dim=-1)
@@ -128,10 +131,7 @@ class ResultsCollector(core.Callback):
         normalized_need_probs = {target: prob / sum(need_probs.values()) for target, prob in need_probs.items()}
 
         targets = [element['target_node'] for element in counts]
-        if self.options.mode == "rf":
-            messages = [tuple(element['message']) for element in counts]
-        else:
-            messages = [tuple(element['message']) for element in counts]
+        messages = [tuple(element['message']) for element in counts]
 
         count_target = defaultdict(float)  # for p(u) equivalent
         count_msg_target = defaultdict(lambda: defaultdict(float))  # for p(w|u)
@@ -169,12 +169,7 @@ class ResultsCollector(core.Callback):
 
     def _information_loss(self, counts):
         targets = [element['target_node'] for element in counts]
-
-        if self.options.mode == "rf":
-            receiver_outputs = [output for element in counts for output in element['receiver_output']]
-        else:
-            #receiver_outputs = [element['receiver_output'] for element in counts]
-            receiver_outputs = [output for element in counts for output in element['receiver_output']]
+        receiver_outputs = [output for element in counts for output in element['receiver_output']]
 
         need_probs = get_need_probs('dutch')
         normalized_need_probs = {target: prob / sum(need_probs.values()) for target, prob in need_probs.items()}

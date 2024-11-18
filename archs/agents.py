@@ -17,8 +17,8 @@ class Sender(nn.Module):
         )
         self.fc = nn.Linear(2 * opts.embedding_size, opts.hidden_size)
 
-        self.use_vq = opts.with_vq
-        if self.use_vq:
+        self.vq = opts.mode == 'vq'
+        if self.vq:
             self.vq_layer = VectorQuantize(
                 dim=opts.hidden_size, 
                 codebook_size=opts.codebook_size, 
@@ -39,7 +39,7 @@ class Sender(nn.Module):
         target_embedding = torch.cat((h[adjusted_target_node_idx], h[adjusted_ego_idx]), dim=1)
         output = self.fc(target_embedding)
 
-        if self.use_vq:
+        if self.vq:
             output, _, commit_loss = self.vq_layer(output)
             return output, commit_loss
         return output, None # batch_size x hidden_size
@@ -91,7 +91,7 @@ class Receiver(nn.Module):
             diff = (log_probabilities - log_probabilities.max()).abs()
             diff = (diff < 1e-10).float().sum(-1).mean().item()
             if diff > 1:
-                print(diff)
+                print("Diff: ", diff)
 
         return log_probabilities
 

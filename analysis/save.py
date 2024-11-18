@@ -19,7 +19,6 @@ def results_to_dataframes(results: list, opts: Options, target_folder: str, save
         'train_method': str(opts.mode),
         'batch_size': int(opts.batch_size),
         'random_seed': int(opts.random_seed),
-        'with_vq': bool(opts.with_vq),
         'codebook_size': int(opts.codebook_size)
     }
 

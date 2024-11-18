@@ -34,17 +34,18 @@ def get_game(opts: Options, num_node_features: int):
     sender_wrapper = LexiconSenderWrapper(
         sender,
         opts.mode,
-        opts.vocab_size, opts.hidden_size,
-        opts.with_vq
+        opts.vocab_size, opts.hidden_size
     )
     receiver_wrapper = LexiconReceiverWrapper(
         receiver,
         opts.mode,
-        opts.vocab_size, opts.hidden_size, 
-        opts.with_vq
+        opts.vocab_size, opts.hidden_size
     )
 
     if opts.mode == 'continuous':
+        game = LexiconSenderReceiverGS(sender_wrapper, receiver_wrapper, loss_nll)
+    
+    elif opts.mode == 'vq':
         game = LexiconSenderReceiverGS(sender_wrapper, receiver_wrapper, loss_nll)
 
     elif opts.mode == 'gs':
@@ -56,6 +57,6 @@ def get_game(opts: Options, num_node_features: int):
             sender_entropy_coeff=0.01, receiver_entropy_coeff=0.01
         )
     else:
-        raise ValueError(f"Invalid wrapper: {opts.wrapper}")
+        raise ValueError(f"Invalid wrapper: {opts.mode}")
 
     return game

@@ -22,7 +22,7 @@ def run_experiments(options_input):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run experiments based on the provided options.')
-    parser.add_argument('--mode', type=str, choices=['continuous', 'rf', 'gs'], default='continuous', help='Set training mode')
+    parser.add_argument('--mode', type=str, choices=['continuous', 'rf', 'gs', 'vq'], default='continuous', help='Set training mode')
     parser.add_argument('--single', action='store_true', help='Run a single experiment')
     parser.add_argument('--prune_graph', action='store_true', help='Prune graph to bfs tree')
     parser.add_argument('--wandb', action='store_true', help='Log to wandb')
