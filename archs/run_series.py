@@ -31,8 +31,8 @@ def run_experiment(opts: Options, target_folder: str, save: bool = True):
         }
 
         # init wandb
-        wb.init(project="referential_game",
-                name=f"{opts.need_probs}_{opts.mode}",
+        wb.init(project="kinship",
+                name=f"{opts.need_probs}_{opts.mode}_dist={opts.distractors}",
                 config=params,
                 settings=wb.Settings(_disable_stats=True) # disable system metrics
             )
@@ -76,9 +76,6 @@ def run_experiment(opts: Options, target_folder: str, save: bool = True):
             # Extract unique Complexity and Information Loss for the epoch
             complexity = epoch_data['Complexity'].iloc[0]
             info_loss = epoch_data['Information Loss'].iloc[0]
-            
-            # Add data for this epoch to the scatter plot table
-            table.add_data(complexity, info_loss, epoch)
 
             wb.log({
                 "eval metrics/Epoch": epoch, 
@@ -86,7 +83,10 @@ def run_experiment(opts: Options, target_folder: str, save: bool = True):
                 "eval metrics/Information Loss": info_loss
             })
 
-        wb.log({"eval metrics/": table})
+            table.add_data(complexity, info_loss, epoch)
+
+        #wb.log({"eval metrics/": table})
+        wb.log({"eval metrics/": wb.plot.scatter(table, x="Complexity", y="Information Loss", title="Complexity vs Information Loss")})
 
         wb.finish()
 

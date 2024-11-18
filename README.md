@@ -27,7 +27,7 @@ Make sure to set a list of options manually in `main.py`.
 ## Options
 The script accepts several command-line arguments to control the experiment settings:
 
-- `--mode`: Specifies the training mode (continuous, rf for Reinforce, or gs for Gumbel-Softmax). Default is gs.
+- `--mode`: Specifies the training mode (continuous, rf for Reinforce, or gs for Gumbel-Softmax, or vq for vq vae). Default is continuous.
 - `--single`: Runs a single experiment. If not set, the script will run a series of experiments.
 - `--prune_graph`: Prunes the input graph to a BFS tree.
 - `--wandb`: Enables logging to Weights & Biases.

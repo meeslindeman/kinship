@@ -9,8 +9,6 @@ from need_probs import get_need_probs
 from collections import Counter, defaultdict
 from math import log2
 
-# FIX CALCULATIONS
-# CALCULATIONS IN DIFFERENT FILE?
 
 class ResultsCollector(core.Callback):
     def __init__(self, options, game, eval_loader, **kwargs):

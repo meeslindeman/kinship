@@ -34,7 +34,6 @@ class Options:
     vocab_size: int = 100
     batch_size: int = 50
     random_seed: int = 42
-    #with_vq: bool = True
 
     # Logging
     compute_topsim: bool = False
