@@ -20,9 +20,9 @@ class Options:
     mode: str = 'continuous' # 'gs', 'rf' 'vq'
 
     # Agents
-    embedding_size: int = 80 # default: 10
+    embedding_size: int = 30 # default: 10
     heads: int = 1 # default: 4
-    hidden_size: int = 50 # default: 20
+    hidden_size: int = 30 # default: 20
     sender_cell: str = 'gru' # 'rnn', 'gru', 'lstm'
     layer: str = 'gat' # 'gat', 'transformer'
     max_len: int = 1 # default: 1
@@ -30,10 +30,11 @@ class Options:
     codebook_size: int = 100 # same as vocabsize
 
     # Training
-    n_epochs: int = 10
+    n_epochs: int = 1000
     vocab_size: int = 100
     batch_size: int = 50
     random_seed: int = 42
+    # learning_rate: int = 1e-2
 
     # Logging
     compute_topsim: bool = False

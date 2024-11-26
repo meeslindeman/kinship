@@ -108,6 +108,7 @@ class ResultsCollector(core.Callback):
 
                 # Collect data per target
                 per_target_data.append({
+                    'ego_node': aux_input.ego_node[0],
                     'target_node': aux_input.target_node[0],
                     'message': message,
                     'receiver_output': receiver_probs.cpu().numpy().tolist(),
