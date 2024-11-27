@@ -16,13 +16,13 @@ class Options:
     prune_graph: bool = False # True for pruning graph to bfs tree (keep only paths from ego to other nodes)
 
     # Game
-    distractors: int = 30 # default: 5
+    distractors: int = 50 # default: 5
     mode: str = 'continuous' # 'gs', 'rf' 'vq'
 
     # Agents
-    embedding_size: int = 80 # default: 10
+    embedding_size: int = 200 # default: 10
     heads: int = 1 # default: 4
-    hidden_size: int = 80 # default: 20
+    hidden_size: int = 200 # default: 20
     sender_cell: str = 'gru' # 'rnn', 'gru', 'lstm'
     layer: str = 'gat' # 'gat', 'transformer'
     max_len: int = 1 # default: 1
@@ -30,7 +30,7 @@ class Options:
     codebook_size: int = 100 # same as vocabsize
 
     # Training
-    n_epochs: int = 1000
+    n_epochs: int = 20
     vocab_size: int = 100
     batch_size: int = 50
     random_seed: int = 43
