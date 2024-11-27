@@ -46,7 +46,7 @@ class Sender(nn.Module):
         return output, None # batch_size x hidden_size
 
 class Receiver(nn.Module):
-    def __init__(self, num_node_features: int, opts: Options, layer: None):
+    def __init__(self, num_node_features: int, opts: Options, layer: nn.Module=None):
         super(Receiver, self).__init__()
         self.distractors = opts.distractors
         if layer: # use shared graph nn

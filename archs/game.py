@@ -29,7 +29,7 @@ def get_game(opts: Options, num_node_features: int):
         return total_loss, {"acc": acc}
 
     sender = Sender(num_node_features, opts)
-    receiver = Receiver(num_node_features, opts, layer=sender.layer)
+    receiver = Receiver(num_node_features, opts)
 
     sender_wrapper = LexiconSenderWrapper(
         sender,
