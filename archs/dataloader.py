@@ -27,6 +27,7 @@ class Collater:
         elem = batch[0]
         if isinstance(elem, BaseData):
             batch = batch[:((len(batch) // self.game_size) * self.game_size)]  # we throw away the last batch_size % game_size
+            labels = [b.target_node_idx for b in batch]
             batch = Batch.from_data_list(
                 batch,
                 follow_batch=self.follow_batch,
@@ -35,7 +36,7 @@ class Collater:
             # Returns a tuple (sender_input, labels, receiver_input, aux_input), aux_input is used to store minibatch of graphs
             return (
                 torch.zeros(self.batch_size, dtype=torch.long), #batch.sequence, # sender input -> sequence of the graph
-                torch.zeros(self.batch_size, dtype=torch.long), # Needs to be zeros times batch size!
+                torch.LongTensor(labels),
                 None,
                 batch
             )

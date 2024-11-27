@@ -7,6 +7,7 @@ from options import Options
 from archs.network import GAT, Transform
 from archs.distractors import select_distractors
 
+
 class Sender(nn.Module):
     def __init__(self, num_node_features: int, opts: Options):
         super(Sender, self).__init__()
@@ -20,11 +21,11 @@ class Sender(nn.Module):
         self.vq = opts.mode == 'vq'
         if self.vq:
             self.vq_layer = VectorQuantize(
-                dim=opts.hidden_size, 
-                codebook_size=opts.codebook_size, 
+                dim=opts.hidden_size,
+                codebook_size=opts.codebook_size,
                 decay=0.8
-            ) 
-        
+            )
+
     def forward(self, x, _aux_input, finetune: bool=False):
         data = _aux_input
         batch_ptr, target_node_idx, ego_idx = data.ptr, data.target_node_idx, data.ego_node_idx
@@ -45,14 +46,17 @@ class Sender(nn.Module):
         return output, None # batch_size x hidden_size
 
 class Receiver(nn.Module):
-    def __init__(self, num_node_features: int, opts: Options):
+    def __init__(self, num_node_features: int, opts: Options, layer: None):
         super(Receiver, self).__init__()
         self.distractors = opts.distractors
-        self.layer = (
-            Transform(num_node_features, opts.embedding_size, opts.heads)
-            if opts.layer == 'transform'
-            else GAT(num_node_features, opts.embedding_size, opts.heads)
-        )
+        if layer: # use shared graph nn
+            self.layer = layer
+        else:
+            self.layer = (
+                Transform(num_node_features, opts.embedding_size, opts.heads)
+                if opts.layer == 'transform'
+                else GAT(num_node_features, opts.embedding_size, opts.heads)
+            )
         self.fc = nn.Linear(opts.hidden_size, opts.embedding_size)
 
     def forward(self, message, _input, _aux_input, finetune: bool=False):
@@ -70,28 +74,21 @@ class Receiver(nn.Module):
             evaluation=getattr(data, 'evaluation', False)
         )
 
-        embeddings = h[indices]
-
+        embeddings = h
         batch_size = data.num_graphs
         num_candidates = embeddings.size(0) // batch_size
 
         embeddings = embeddings.view(batch_size, num_candidates, -1)
         message = self.fc(message)
         message = message.unsqueeze(2)
-
         dot_products = torch.bmm(embeddings, message).squeeze(-1)
 
-        # break tie
-        diff = dot_products.abs() - dot_products.abs().max()
-        eps = (diff < 1e-10).float() * dot_products.abs().max() * 1e-5 * torch.randn_like(dot_products)
-        dot_products = dot_products + eps
         log_probabilities = F.log_softmax(dot_products, dim=1)
 
-        if True: # not self.training:
-            diff = (log_probabilities - log_probabilities.max()).abs()
-            diff = (diff < 1e-10).float().sum(-1).mean().item()
-            if diff > 1:
-                print("Diff: ", diff)
-
+        # elimintate all nodes that are neither distractors or target
+        mask = torch.zeros(batch_size * num_candidates)
+        mask[indices] = 1
+        mask = mask.view(batch_size, -1)
+        log_probabilities = log_probabilities - (1 - mask) * 1e5
         return log_probabilities
 

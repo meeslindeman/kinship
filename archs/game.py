@@ -29,7 +29,7 @@ def get_game(opts: Options, num_node_features: int):
         return total_loss, {"acc": acc}
 
     sender = Sender(num_node_features, opts)
-    receiver = Receiver(num_node_features, opts)
+    receiver = Receiver(num_node_features, opts, layer=sender.layer)
 
     sender_wrapper = LexiconSenderWrapper(
         sender,
@@ -44,7 +44,7 @@ def get_game(opts: Options, num_node_features: int):
 
     if opts.mode == 'continuous':
         game = LexiconSenderReceiverGS(sender_wrapper, receiver_wrapper, loss_nll)
-    
+
     elif opts.mode == 'vq':
         game = LexiconSenderReceiverGS(sender_wrapper, receiver_wrapper, loss_nll)
 

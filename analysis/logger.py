@@ -8,7 +8,7 @@ from itertools import product
 from need_probs import get_need_probs
 from collections import Counter, defaultdict
 from math import log2
-
+from graph.kemp_build import NODES
 
 class ResultsCollector(core.Callback):
     def __init__(self, options, game, eval_loader, **kwargs):
@@ -96,15 +96,17 @@ class ResultsCollector(core.Callback):
                 else:
                     message = interaction.message.argmax(dim=-1).tolist()
 
-                # Get the receiver output logits and compute probabilities
-                receiver_probs = F.softmax(interaction.receiver_output, dim=-1)
+                # Get the receiver output log_prop and compute probabilities
+                receiver_probs = interaction.receiver_output.exp()
 
                 # Check if the prediction is correct
                 predicted_label = receiver_probs.argmax().item()
-                correct = (predicted_label == 0)  # Target is at index 0
+                correct = (predicted_label == labels.item())
 
                 total_correct += int(correct)
                 total_samples += 1
+
+                assert NODES[predicted_label] != 'Ego', f"{receiver_probs[0, predicted_label]}"
 
                 # Collect data per target
                 per_target_data.append({
@@ -112,7 +114,7 @@ class ResultsCollector(core.Callback):
                     'target_node': aux_input.target_node[0],
                     'message': message,
                     'receiver_output': receiver_probs.cpu().numpy().tolist(),
-                    'predicted_label': predicted_label,
+                    'predicted_label': NODES[predicted_label],
                     'correct': correct,
                     'epoch': epoch
                 })
@@ -176,7 +178,7 @@ class ResultsCollector(core.Callback):
         information_loss = 0
 
         for i, target in enumerate(targets):
-            receiver_output = log2(receiver_outputs[i][0])
+            receiver_output = log2(receiver_outputs[i][0] + 1e-10)
             target_prob = normalized_need_probs[target]
 
             cross_entropy = -target_prob * receiver_output
