@@ -16,15 +16,15 @@ class Options:
     prune_graph: bool = False # True for pruning graph to bfs tree (keep only paths from ego to other nodes)
 
     # Game
-    distractors: int = 30 # default: 5
-    mode: str = 'continuous' # 'gs', 'rf' 'vq'
+    distractors: int = 5 # default: 5
+    mode: str = 'continuous' # 'gs', 'rf', 'vq', 'continuous'
 
     # Agents
     embedding_size: int = 80 # default: 10
     heads: int = 1 # default: 4
     hidden_size: int = 50 # default: 20
     sender_cell: str = 'gru' # 'rnn', 'gru', 'lstm'
-    layer: str = 'gat' # 'gat', 'transformer'
+    layer: str = 'gat' # 'gat', 'transform'
     max_len: int = 1 # default: 1
     gs_tau: float = 1.0 # default: 1.0
     codebook_size: int = 100 # same as vocabsize
@@ -46,7 +46,7 @@ class Options:
     evaluation: bool = True
     eval_distractors: int = None
     eval_batch_size: int = 1
-    evaluation_interval: int = 2
+    evaluation_interval: int = 5
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # Set this according to parameters in main.py

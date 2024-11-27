@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from vector_quantize_pytorch import VectorQuantize
 
 from options import Options
-from archs.network import GAT, Transform
+from archs.network import GAT_old, GAT, Transform
 from archs.distractors import select_distractors
 
 class Sender(nn.Module):

@@ -21,8 +21,9 @@ def get_game(opts: Options, num_node_features: int):
         acc = (labels == receiver_output.argmax(dim=1)).float().mean()
 
         if isinstance(message, tuple):
+            alpha = 1.0
             message, commit_loss = message
-            total_loss = nll + commit_loss.mean()
+            total_loss = nll + (alpha * commit_loss)
         else:
             total_loss = nll
 

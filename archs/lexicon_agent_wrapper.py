@@ -9,8 +9,6 @@ from torch.distributions import Categorical
 from egg.core.baselines import Baseline, MeanBaseline
 from collections import defaultdict
 
-# IMPLEMENT VQ-VAE
-
 class LexiconSenderWrapper(nn.Module):
     def __init__(
         self,
