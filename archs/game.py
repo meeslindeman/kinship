@@ -45,7 +45,7 @@ def get_game(opts: Options, num_node_features: int):
 
     if opts.mode == 'continuous':
         game = LexiconSenderReceiverGS(sender_wrapper, receiver_wrapper, loss_nll)
-    
+
     elif opts.mode == 'vq':
         game = LexiconSenderReceiverGS(sender_wrapper, receiver_wrapper, loss_nll)
 

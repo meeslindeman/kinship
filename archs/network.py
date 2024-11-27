@@ -3,43 +3,26 @@ import torch.nn.functional as F
 from torch_geometric.nn import TransformerConv
 from torch_geometric.nn import GATv2Conv
 
-class GAT_old(nn.Module):
-    def __init__(self, num_node_features, embedding_size, heads):
-        super().__init__()
-        self.out_heads = 1
-
-        self.conv1 = GATv2Conv(num_node_features, embedding_size, edge_dim=2, heads=heads, concat=True)
-        self.conv2 = GATv2Conv(-1, embedding_size, edge_dim=2, heads=self.out_heads, concat=True)
-        self.conv3 = GATv2Conv(-1, embedding_size, edge_dim=2, heads=self.out_heads, concat=True)
-
-    def forward(self, data):
-        x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr
-
-        h = self.conv1(x=x, edge_index=edge_index, edge_attr=edge_attr)
-        h = F.leaky_relu(h)
-
-        h = self.conv2(x=h, edge_index=edge_index, edge_attr=edge_attr)
-        h = F.leaky_relu(h)
-
-        h = self.conv3(x=h, edge_index=edge_index, edge_attr=edge_attr)
-
-        return h
 
 class GAT(nn.Module):
     def __init__(self, num_node_features, embedding_size, heads):
         super().__init__()
         self.out_heads = 1
         self.n_layers = 3
+        edge_dim = 20
         self.f = nn.Linear(num_node_features, embedding_size)
-        self.conv = GATv2Conv(embedding_size, embedding_size, edge_dim=2, heads=heads, concat=False)
+        self.fe = nn.Linear(2, edge_dim)
+        self.conv = GATv2Conv(embedding_size, embedding_size, edge_dim=edge_dim, heads=heads, concat=False)
 
     def forward(self, data):
         x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr
-        h = self.f(x)
+        act_f = F.relu
+        h = act_f(self.f(x))
+        edge_attr = act_f(self.fe(edge_attr))
 
         for i in range(self.n_layers):
             h = self.conv(x=h, edge_index=edge_index, edge_attr=edge_attr)
-            h = F.leaky_relu(h)
+            h = act_f(h)
 
         return h
 

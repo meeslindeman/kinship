@@ -27,6 +27,7 @@ class Collater:
         elem = batch[0]
         if isinstance(elem, BaseData):
             batch = batch[:((len(batch) // self.game_size) * self.game_size)]  # we throw away the last batch_size % game_size
+            labels = [b.target_node_idx for b in batch]
             batch = Batch.from_data_list(
                 batch,
                 follow_batch=self.follow_batch,
@@ -35,9 +36,9 @@ class Collater:
             # Returns a tuple (sender_input, labels, receiver_input, aux_input), aux_input is used to store minibatch of graphs
             return (
                 torch.zeros(self.batch_size, dtype=torch.long), #batch.sequence, # sender input -> sequence of the graph
-                torch.zeros(self.batch_size, dtype=torch.long), # Needs to be zeros times batch size!
-                None,  
-                batch  
+                torch.LongTensor(labels),
+                None,
+                batch
             )
 
         raise TypeError(f"DataLoader found invalid type: '{type(elem)}'")
@@ -82,32 +83,35 @@ class DataLoader(torch.utils.data.DataLoader):
         )
 
 def create_eval_data(dataset):
-    nodes = set([
-        'MM', 'MF', 'MZy', 'MBy', 'M', 'MZe', 'MBe',
-        'FM', 'FF', 'FZy', 'FBy', 'F', 'FZe', 'FBe',
-        'Zy', 'By', 'Ego', 'Ze', 'Be', 'ZyD', 'ZyS',
-        'ByD', 'ByS', 'D', 'S', 'ZeD', 'ZeS', 'BeD', 'BeS',
-        'DD', 'DS', 'SD', 'SS'
-    ])
+    all_data = []
+    for ego in ['Bob', 'Alice']:
+        filtered_data = []
+        nodes = set([
+            'MM', 'MF', 'MZy', 'MBy', 'M', 'MZe', 'MBe',
+            'FM', 'FF', 'FZy', 'FBy', 'F', 'FZe', 'FBe',
+            'Zy', 'By', 'Ego', 'Ze', 'Be', 'ZyD', 'ZyS',
+            'ByD', 'ByS', 'D', 'S', 'ZeD', 'ZeS', 'BeD', 'BeS',
+            'DD', 'DS', 'SD', 'SS'
+        ])
+        for data in dataset:
+            if data.ego_node != ego: continue
 
-    filtered_data = []
-    
-    for data in dataset:
-        # Convert target_node to a scalar if it's a tensor
-        if isinstance(data.target_node, torch.Tensor):
-            target_node = data.target_node.item()  # Convert tensor to scalar
-        else:
-            target_node = data.target_node  # Use target_node as-is if it's a string or integer
+            # Convert target_node to a scalar if it's a tensor
+            if isinstance(data.target_node, torch.Tensor):
+                target_node = data.target_node.item()  # Convert tensor to scalar
+            else:
+                target_node = data.target_node  # Use target_node as-is if it's a string or integer
 
-        # If the target_node is in the set and hasn't been found yet, add it to the filtered_data
-        if target_node in nodes:
-            filtered_data.append(data)
-            nodes.remove(target_node)  # Remove the node from the set to ensure uniqueness
+            # If the target_node is in the set and hasn't been found yet, add it to the filtered_data
+            if target_node in nodes:
+                filtered_data.append(data)
+                nodes.remove(target_node)  # Remove the node from the set to ensure uniqueness
 
-        # Stop once we've found all 32 targets
-        if len(filtered_data) == 32:
-            break
-    return filtered_data
+            # Stop once we've found all 32 targets
+            if len(filtered_data) == 32:
+                break
+        all_data.extend(filtered_data)
+    return all_data
 
 def get_loaders(opts, dataset):
     _, val_data = train_test_split(dataset, test_size=0.2, random_state=42)
