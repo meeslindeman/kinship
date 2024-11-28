@@ -4,18 +4,22 @@ import torch.nn.functional as F
 from vector_quantize_pytorch import VectorQuantize
 
 from options import Options
-from archs.network import GAT_old, GAT, Transform
+from archs.network import GAT, Transform, RGCN
 from archs.distractors import select_distractors
 
 
 class Sender(nn.Module):
     def __init__(self, num_node_features: int, opts: Options):
         super(Sender, self).__init__()
-        self.layer = (
-            Transform(num_node_features, opts.embedding_size, opts.heads)
-            if opts.layer == 'transform'
-            else GAT(num_node_features, opts.embedding_size, opts.heads)
-        )
+        if opts.layer == 'transform':
+            self.layer = Transform(num_node_features, opts.embedding_size, opts.heads)
+        elif opts.layer == 'gat':
+            self.layer = GAT(num_node_features, opts.embedding_size, opts.heads)
+        elif opts.layer == 'rgcn':
+            self.layer = RGCN(num_node_features, opts.embedding_size) # add num relations based on data? or manually?
+        else:
+            raise ValueError("Unsupported layer type: Choose from 'transform', 'gat', or 'rgcn'")
+        
         self.fc = nn.Linear(2 * opts.embedding_size, opts.hidden_size)
 
         self.vq = opts.mode == 'vq'
@@ -52,11 +56,15 @@ class Receiver(nn.Module):
         if layer: # use shared graph nn
             self.layer = layer
         else:
-            self.layer = (
-                Transform(num_node_features, opts.embedding_size, opts.heads)
-                if opts.layer == 'transform'
-                else GAT(num_node_features, opts.embedding_size, opts.heads)
-            )
+            if opts.layer == 'transform':
+                self.layer = Transform(num_node_features, opts.embedding_size, opts.heads)
+            elif opts.layer == 'gat':
+                self.layer = GAT(num_node_features, opts.embedding_size, opts.heads)
+            elif opts.layer == 'rgcn':
+                self.layer = RGCN(num_node_features, opts.embedding_size)
+            else:
+                raise ValueError("Unsupported layer type: Choose from 'transform', 'gat', or 'rgcn'")
+            
         self.fc = nn.Linear(opts.hidden_size, opts.embedding_size)
 
     def forward(self, message, _input, _aux_input, finetune: bool=False):

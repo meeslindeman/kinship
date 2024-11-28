@@ -21,7 +21,7 @@ class LexiconSenderWrapper(nn.Module):
         self.agent = agent
         self.agent_type = agent_type
 
-        if agent_type in ['rf', 'gs']:
+        if agent_type in ['vq', 'rf', 'gs']:
             self.vocab_size = vocab_size
             self.lex_f = nn.Linear(hidden_size, vocab_size)
 
@@ -30,6 +30,7 @@ class LexiconSenderWrapper(nn.Module):
 
         if self.agent_type == 'vq':
             h, loss = output
+            h = self.lex_f(h)
             return h, loss
 
         h, _ = output
@@ -101,13 +102,14 @@ class LexiconReceiverWrapper(nn.Module):
         self.agent = agent
         self.agent_type = agent_type
 
-        if agent_type in ['gs', 'rf']:
+        if agent_type in ['vq', 'gs', 'rf']:
             self.vocab_size = vocab_size
             self.lex_f = nn.Linear(vocab_size, hidden_size)
 
     def forward(self, message, input=None, aux_input=None, warm_up: bool=True):
         if self.agent_type == 'vq':
             message = message[0]
+            message = self.lex_f(message)
             return self.agent(message, input, aux_input, finetune=not warm_up)
 
         if self.agent_type == 'continuous':

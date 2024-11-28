@@ -20,11 +20,11 @@ class Options:
     mode: str = 'continuous' # 'gs', 'rf' 'vq'
 
     # Agents
-    embedding_size: int = 200 # default: 10
+    embedding_size: int = 200 # default: 80
     heads: int = 1 # default: 4
     hidden_size: int = 200 # default: 20
     sender_cell: str = 'gru' # 'rnn', 'gru', 'lstm'
-    layer: str = 'gat' # 'gat', 'transform'
+    layer: str = 'rgcn' # 'gat', 'transform', 'rgcn'
     max_len: int = 1 # default: 1
     gs_tau: float = 1.0 # default: 1.0
     codebook_size: int = 100 # same as vocabsize

@@ -25,14 +25,14 @@ def run_experiment(opts: Options, target_folder: str, save: bool = True):
         'max_len': int(opts.max_len),
         'sender_cell': str(opts.sender_cell),
         'train_method': str(opts.mode),
-        'batch_size': int(opts.batch_size),
+        'layer': str(opts.layer),
         'random_seed': int(opts.random_seed),
         'codebook_size': int(opts.codebook_size)
         }
 
         # init wandb
         wb.init(project="kinship",
-                name=f"{opts.need_probs}_{opts.mode}_dist={opts.distractors}",
+                name=f"{opts.mode}_{opts.layer}_dist={opts.distractors}",
                 config=params,
                 settings=wb.Settings(_disable_stats=True) # disable system metrics
             )
