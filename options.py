@@ -27,10 +27,9 @@ class Options:
     layer: str = 'rgcn' # 'gat', 'transform', 'rgcn'
     max_len: int = 1 # default: 1
     gs_tau: float = 1.0 # default: 1.0
-    codebook_size: int = 100 # same as vocabsize
 
     # Training
-    n_epochs: int = 20
+    n_epochs: int = 2000
     vocab_size: int = 100
     batch_size: int = 50
     random_seed: int = 43

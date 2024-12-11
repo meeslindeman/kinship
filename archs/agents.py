@@ -19,14 +19,15 @@ class Sender(nn.Module):
             self.layer = RGCN(num_node_features, opts.embedding_size) # add num relations based on data? or manually?
         else:
             raise ValueError("Unsupported layer type: Choose from 'transform', 'gat', or 'rgcn'")
-        
+
         self.fc = nn.Linear(2 * opts.embedding_size, opts.hidden_size)
 
         self.vq = opts.mode == 'vq'
         if self.vq:
+            self.vocab_size = opts.vocab_size
             self.vq_layer = VectorQuantize(
                 dim=opts.hidden_size,
-                codebook_size=opts.codebook_size,
+                codebook_size=opts.vocab_size,
                 decay=0.8
             )
 
@@ -45,7 +46,8 @@ class Sender(nn.Module):
         output = self.fc(target_embedding)
 
         if self.vq:
-            output, _, commit_loss = self.vq_layer(output)
+            _, indices, commit_loss = self.vq_layer(output)
+            output = F.one_hot(indices, self.vocab_size)
             return output, commit_loss
         return output, None # batch_size x hidden_size
 
@@ -64,7 +66,7 @@ class Receiver(nn.Module):
                 self.layer = RGCN(num_node_features, opts.embedding_size)
             else:
                 raise ValueError("Unsupported layer type: Choose from 'transform', 'gat', or 'rgcn'")
-            
+
         self.fc = nn.Linear(opts.hidden_size, opts.embedding_size)
 
     def forward(self, message, _input, _aux_input, finetune: bool=False):
