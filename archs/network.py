@@ -35,8 +35,7 @@ class RGCN(nn.Module):
         self.f = nn.Linear(num_node_features, embedding_size)
         self.conv_layers = nn.ModuleList([
             RGCNConv(embedding_size, embedding_size, num_relations=num_relations)
-            for _ in range(self.n_layers)
-        ])
+        ] * self.n_layers)
 
     def forward(self, data):
         x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr
