@@ -39,8 +39,9 @@ def run_experiment(opts: Options, target_folder: str, save: bool = True):
 
     logging.info(f"Running {str(opts)}")
 
-    dataset = KempGraphDataset(root=opts.root+opts.need_probs, prune=opts.prune_graph)
-    print(f"Dataset: {opts.root+opts.need_probs}")
+    dataset_path = os.path.join(opts.root, f"{opts.need_probs}_seed{opts.data_seed}")
+    dataset = KempGraphDataset(dataset_path, prune=opts.prune_graph, seed=opts.data_seed)
+    print(f"Dataset: {dataset_path}")
 
     train_loader, valid_loader, eval_loader = get_loaders(opts, dataset)
     game = get_game(opts, dataset.num_node_features)
@@ -97,7 +98,7 @@ def run_series_experiments(opts_list: List[Options], base_target_folder: str):
     results = []
 
     for opts in opts_list:
-        target_folder = os.path.join(base_target_folder, opts.need_probs)
+        target_folder = os.path.join(base_target_folder, f"{opts.need_probs}_seed_{opts.data_seed}")
         if not os.path.exists(target_folder):
             os.makedirs(target_folder)
         metrics = run_experiment(opts, target_folder, False)

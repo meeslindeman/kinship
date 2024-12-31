@@ -4,7 +4,6 @@ import coloredlogs
 from options import Options
 from init import initialize_dataset_if_needed
 from archs.run_series import run_experiment, run_series_experiments
-from analysis.plot import plot_experiment
 from analysis.timer import timer
 
 logging.basicConfig(level=logging.INFO)
@@ -14,7 +13,6 @@ coloredlogs.install(level='INFO')
 def run_experiments(options_input):
     if isinstance(options_input, Options):
         results = run_experiment(options_input, f'results/{options_input.need_probs}')
-        # plot_experiment(results, mode='both', save=False)
     elif isinstance(options_input, list):
         results, _ = run_series_experiments(options_input, f'results/')
     else:
@@ -40,6 +38,6 @@ if __name__ == "__main__":
         # Run multiple experiments: set __str__ in Options and labels in plot.py accordingly
         multiple_options = [
             Options(mode=args.mode, prune_graph=args.prune_graph, log_wandb=args.wandb),
-            Options(mode=args.mode, prune_graph=args.prune_graph, log_wandb=args.wandb, with_vq=True),
+            Options(mode=args.mode, prune_graph=args.prune_graph, log_wandb=args.wandb),
         ]
         run_experiments(multiple_options)

@@ -1,4 +1,3 @@
-import os
 import torch
 import random
 import numpy as np
@@ -13,11 +12,16 @@ class KempGraphDataset(Dataset):
         need_probs=None,
         transform=None,
         pre_transform=None,
-        prune=False
+        prune=False,
+        seed: int = 42
     ):
         self.number_of_graphs = number_of_graphs
         self.need_probs = need_probs
+        self.seed = seed
+        np.random.seed(seed)
+
         super(KempGraphDataset, self).__init__(root, transform, pre_transform)
+        
         self.data = None
         self.process(prune=prune)
 

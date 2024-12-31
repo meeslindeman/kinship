@@ -26,7 +26,7 @@ class GAT(nn.Module):
         return h
 
 class RGCN(nn.Module):
-    def __init__(self, num_node_features, embedding_size, num_relations=2): #num_relations=2 for kinship: child-of, parent-of
+    def __init__(self, num_node_features, embedding_size, num_relations=1): #num_relations=2 for kinship: child-of, parent-of
         super().__init__()
         self.n_layers = 3
         self.embedding_size = embedding_size
@@ -56,9 +56,9 @@ class Transform(nn.Module):
         super().__init__()
         self.out_heads = 1
 
-        self.conv1 = TransformerConv(num_node_features, embedding_size, edge_dim=2, heads=heads, concat=True) #adjust 2 or 3 for relations
-        self.conv2 = TransformerConv(-1, embedding_size, edge_dim=2, heads=self.out_heads, concat=True)
-        self.conv3 = TransformerConv(-1, embedding_size, edge_dim=2, heads=self.out_heads, concat=True)
+        self.conv1 = TransformerConv(num_node_features, embedding_size, edge_dim=1, heads=heads, concat=True) #adjust 2 or 3 for relations
+        self.conv2 = TransformerConv(-1, embedding_size, edge_dim=1, heads=self.out_heads, concat=True)
+        self.conv3 = TransformerConv(-1, embedding_size, edge_dim=1, heads=self.out_heads, concat=True)
 
     def forward(self, data):
         x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr

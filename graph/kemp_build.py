@@ -55,6 +55,7 @@ def get_graph():
         edge_attr.append([1., 0.])  # 'parent-of'
         edge_attr.append([0., 1.])  # 'child-of'
 
+
     edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
     edge_attr = torch.tensor(edge_attr, dtype=torch.float)
 
@@ -88,31 +89,25 @@ def prune_graph(data, ego_idx):
 
     def convert_networkx_to_torch_geometric(G):
         # Get the edge_index tensor
-        edge_index = torch.tensor(list(G.edges)).t().contiguous()
+        edge_index = torch.tensor(list(G.edges), dtype=torch.long).t().contiguous()
 
         # Collect node attributes (assuming each node has the same set of attributes)
-        if G.nodes:
-            node_attr = [None] * len(G.nodes)
-            for nid, attrs in G.nodes(data=True):
-                node_attr[nid] = attrs['x']
-            x = torch.tensor(node_attr, dtype=torch.float)
-        else:
-            x = None  # No node attributes available
+        node_attr = []
+        for nid, attrs in G.nodes(data=True):
+            node_attr.append(attrs['x'])
+        x = torch.tensor(node_attr, dtype=torch.float)
 
         # Collect edge attributes (assuming each edge has the same set of attributes)
-        if G.edges:
-            edge_attr = []
-            for _, _, attrs in G.edges(data=True):
-                edge_attr.append(attrs['edge_attr'])
-            edge_attr = torch.tensor(edge_attr, dtype=torch.float)
-        else:
-            edge_attr = None  # No edge attributes available
+        edge_attr = []
+        for _, _, attrs in G.edges(data=True):
+            edge_attr.append(attrs['edge_attr'])
+        edge_attr = torch.tensor(edge_attr, dtype=torch.float)
 
         # Create PyTorch Geometric Data object
         data = Data(x=x, edge_index=edge_index, edge_attr=edge_attr)
 
         return data
-
+    
     G = convert_to_networkx_with_attrs(data)
 
     bfs_tree = nx.bfs_tree(G, source=ego_idx)

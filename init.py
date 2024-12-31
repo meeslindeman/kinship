@@ -15,31 +15,19 @@ from need_probs import get_need_probs
 
 def initialize_dataset_if_needed(opts: Options):
     """Check if dataset exists; initialize it if not."""
-    dataset_path = os.path.join(opts.root, opts.need_probs)
+    dataset_path = os.path.join(opts.root, f"{opts.need_probs}_seed{opts.data_seed}")
     
     # Check if the dataset directory exists
     if not os.path.exists(dataset_path):
         print(f"Dataset not found at {dataset_path}. Initializing dataset...")
-        
         need_probs = get_need_probs(opts.need_probs)
-        dataset, average_nodes = process_dataset(opts, need_probs)
-
-        print(f"Dataset initialized with {opts.need_probs} need probabilities.")
+        dataset = KempGraphDataset(
+            root=dataset_path,
+            number_of_graphs=opts.number_of_graphs,
+            need_probs=need_probs,
+            seed=opts.data_seed
+        )
+        print(f"Dataset {need_probs} initialized at {dataset_path}.")
         print(f"Number of graphs: {len(dataset)}")
-        print(f"Average number of nodes: {average_nodes}")
-        print(f"Example graph: {dataset[0]}\n")
     else:
         print(f"Dataset found at {dataset_path}. Skipping initialization.")
-
-def process_dataset(opts: Options, need_probs: Optional[Dict] = None):
-    """Initialize the dataset and calculate statistics."""
-    dataset = KempGraphDataset(
-        root=os.path.join(opts.root, opts.need_probs),
-        number_of_graphs=opts.number_of_graphs,
-        need_probs=need_probs
-    )
-
-    total_nodes = sum(data.num_nodes for data in dataset)
-    average_nodes = total_nodes / len(dataset)
-
-    return dataset, average_nodes
