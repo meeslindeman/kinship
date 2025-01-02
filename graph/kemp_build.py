@@ -30,9 +30,29 @@ _NODE_GENDER = {
     'ZyD': [1], 'ZyS': [0], 'ByD': [1], 'ByS': [0], 'ZeD': [1], 'ZeS': [0], 'BeD': [1], 'BeS': [0],
     'D': [1], 'S': [0], 'DD': [1], 'DS': [0], 'SD': [1], 'SS': [0]
 }
+
+_ROLE_FEATURES = {
+    # Ambiguous nodes (siblings of parents)
+    'MZy': [1, 0], 'MBy': [1, 0], 'FZy': [1, 0], 'FBy': [1, 0], # younger siblings of parents
+    'MZe': [0, 1], 'MBe': [0, 1], 'FZe': [0, 1], 'FBe': [0, 1], # older siblings of parents
+    # Default vector for unique nodes
+    'M': [0, 0], 'F': [0, 0], 'Ego': [0, 0],
+    'MM': [0, 0], 'MF': [0, 0], 'FM': [0, 0], 'FF': [0, 0],
+    'Zy': [0, 0], 'By': [0, 0], 'Ze': [0, 0], 'Be': [0, 0],
+    'ZyD': [0, 0], 'ZyS': [0, 0], 'ByD': [0, 0], 'ByS': [0, 0],
+    'ZeD': [0, 0], 'ZeS': [0, 0], 'BeD': [0, 0], 'BeS': [0, 0],
+    'D': [0, 0], 'S': [0, 0], 'DD': [0, 0], 'DS': [0, 0], 'SD': [0, 0], 'SS': [0, 0]
+}
+
+
 NODE_FEATS = {}
-for k, v in _NODE_GENDER.items():
-    NODE_FEATS[k] = v + [1 - v[0]]
+for node, gender_features in _NODE_GENDER.items():
+    # Add gender 
+    NODE_FEATS[node] = gender_features + [1 - gender_features[0]]
+    
+    # Add role features
+    role_features = _ROLE_FEATURES.get(node, [0, 0])  # Default to [0, 0] if not specified
+    NODE_FEATS[node] += role_features
 
 def get_graph():
     # Define nodes and their labels
