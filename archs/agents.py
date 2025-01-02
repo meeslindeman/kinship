@@ -7,7 +7,6 @@ from options import Options
 from archs.network import GAT, Transform, RGCN
 from archs.distractors import select_distractors
 
-
 class Sender(nn.Module):
     def __init__(self, num_node_features: int, opts: Options):
         super(Sender, self).__init__()
@@ -23,13 +22,16 @@ class Sender(nn.Module):
         self.fc = nn.Linear(2 * opts.embedding_size, opts.hidden_size)
 
         self.vq = opts.mode == 'vq'
-        if self.vq:
-            self.vocab_size = opts.vocab_size
-            self.vq_layer = VectorQuantize(
-                dim=opts.hidden_size,
-                codebook_size=opts.vocab_size,
-                decay=0.8
-            )
+
+        self.hidden_size = opts.hidden_size
+        self.vocab_size = opts.vocab_size
+        self.vq_layer = VectorQuantize(
+            dim=opts.hidden_size,
+            codebook_size=opts.vocab_size,
+            commitment_weight=0.2,
+            codebook_diversity_loss_weight=0.1,
+            decay=0.85
+        )
 
     def forward(self, x, _aux_input, finetune: bool=False):
         data = _aux_input
@@ -45,8 +47,17 @@ class Sender(nn.Module):
         target_embedding = torch.cat((h[adjusted_target_node_idx], h[adjusted_ego_idx]), dim=1)
         output = self.fc(target_embedding)
 
+        # norms = torch.norm(output, dim=-1).detach().cpu().numpy()
+        # print(f"Embedding Norms: Mean={norms.mean()}, Std={norms.std()}")
+
+        # self.bn = nn.BatchNorm1d(self.hidden_size)
+        # output = self.bn(output)
+
         if self.vq:
+            self.bn = nn.BatchNorm1d(self.hidden_size)
+            output = self.bn(output)
             _, indices, commit_loss = self.vq_layer(output)
+            print(f"Number of unique codebook entries used: {len(torch.unique(indices))} / {self.vocab_size}")
             output = F.one_hot(indices, self.vocab_size)
             return output, commit_loss
         return output, None # batch_size x hidden_size

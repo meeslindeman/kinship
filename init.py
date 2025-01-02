@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+import os
 from graph.kemp_dataset import KempGraphDataset
 from options import Options
 from need_probs import get_need_probs
@@ -6,12 +6,6 @@ from need_probs import get_need_probs
 opts = Options()
 
 need_probs = get_need_probs(opts.need_probs)
-
-import os
-from typing import Dict, Optional
-from options import Options
-from graph.kemp_dataset import KempGraphDataset
-from need_probs import get_need_probs
 
 def initialize_dataset_if_needed(opts: Options):
     """Check if dataset exists; initialize it if not."""

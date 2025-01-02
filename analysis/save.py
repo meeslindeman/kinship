@@ -1,11 +1,12 @@
 import json
 import pandas as pd
 from options import Options
-
-import pandas as pd
-from options import Options
+import os
 
 def results_to_dataframes(results: list, opts: Options, target_folder: str, save: bool = True):
+    # Ensure the target folder exists
+    os.makedirs(target_folder, exist_ok=True)
+
     # Extract parameters
     params = {
         'distractors': int(opts.distractors),
@@ -19,7 +20,7 @@ def results_to_dataframes(results: list, opts: Options, target_folder: str, save
         'train_method': str(opts.mode),
         'batch_size': int(opts.batch_size),
         'random_seed': int(opts.random_seed),
-        'codebook_size': int(opts.codebook_size)
+        'data_seed': int(opts.data_seed)
     }
 
     # Initialize lists for dataframes
@@ -62,7 +63,6 @@ def results_to_dataframes(results: list, opts: Options, target_folder: str, save
             **{k: v for k, v in result.items() if k not in ['epoch', 'mode', 'loss', 'message_counts', 'evaluation']}
         })
 
-
     metrics_df = pd.DataFrame(metrics)
     evaluation_df = pd.DataFrame(evaluation)
     counts_df = pd.DataFrame(counts)
@@ -72,8 +72,8 @@ def results_to_dataframes(results: list, opts: Options, target_folder: str, save
 
     # Save DataFrames
     if save:
-        metrics_df.to_csv(f'{target_folder}/metrics.csv', index=False)
-        counts_df.to_csv(f'{target_folder}/counts.csv', index=False)
-        evaluation_df.to_csv(f'{target_folder}/evaluation.csv', index=False)
+        metrics_df.to_csv(f'{target_folder}/metrics_{opts.mode}.csv', index=False)
+        # counts_df.to_csv(f'{target_folder}/counts.csv', index=False)
+        # evaluation_df.to_csv(f'{target_folder}/evaluation.csv', index=False)
 
     return metrics_df, counts_df, evaluation_df

@@ -138,7 +138,6 @@ def prune_graph(data, ego_idx):
         if edge in G.edges:
             bfs_tree.edges[edge].update(G.edges[edge])  # Copy edge attributes
 
-
     pruned_data = convert_networkx_to_torch_geometric(bfs_tree)
 
     # # sanaty check: make sure that the node attr and edge attr are preserved correctly

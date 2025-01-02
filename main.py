@@ -10,11 +10,11 @@ logging.basicConfig(level=logging.INFO)
 coloredlogs.install(level='INFO')
 
 @timer
-def run_experiments(options_input):
-    if isinstance(options_input, Options):
-        results = run_experiment(options_input, f'results/{options_input.need_probs}')
-    elif isinstance(options_input, list):
-        results, _ = run_series_experiments(options_input, f'results/')
+def run_experiments(opts):
+    if isinstance(opts, Options):
+        results = run_experiment(opts, f'results/{opts.need_probs + str(opts.data_seed)}')
+    elif isinstance(opts, list):
+        results, _ = run_series_experiments(opts, f'results/')
     else:
         raise ValueError("Invalid input for options_input")
 

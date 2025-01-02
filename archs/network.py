@@ -26,27 +26,27 @@ class GAT(nn.Module):
         return h
 
 class RGCN(nn.Module):
-    def __init__(self, num_node_features, embedding_size, num_relations=1): #num_relations=2 for kinship: child-of, parent-of
+    def __init__(self, num_node_features, embedding_size, num_relations=2):  # num_relations=2 for kinship
         super().__init__()
-        self.n_layers = 3
         self.embedding_size = embedding_size
         self.num_relations = num_relations
 
         self.f = nn.Linear(num_node_features, embedding_size)
-        self.conv_layers = nn.ModuleList([
-            RGCNConv(embedding_size, embedding_size, num_relations=num_relations)
-        ] * self.n_layers)
+        self.conv = RGCNConv(embedding_size, embedding_size, num_relations=num_relations)
 
     def forward(self, data):
         x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr
         act_f = F.relu
 
+        # Initial linear transformation
         h = act_f(self.f(x))
 
+        # Convert edge_attr to edge_type
         edge_type = edge_attr.argmax(dim=1)
 
-        for conv in self.conv_layers:
-            h = conv(x=h, edge_index=edge_index, edge_type=edge_type)
+        # Reuse the same layer across iterations
+        for _ in range(3):  # 3 iterations
+            h = self.conv(x=h, edge_index=edge_index, edge_type=edge_type)
             h = act_f(h)
 
         return h
@@ -55,20 +55,23 @@ class Transform(nn.Module):
     def __init__(self, num_node_features, embedding_size, heads):
         super().__init__()
         self.out_heads = 1
+        edge_dim = 2
 
-        self.conv1 = TransformerConv(num_node_features, embedding_size, edge_dim=1, heads=heads, concat=True) #adjust 2 or 3 for relations
-        self.conv2 = TransformerConv(-1, embedding_size, edge_dim=1, heads=self.out_heads, concat=True)
-        self.conv3 = TransformerConv(-1, embedding_size, edge_dim=1, heads=self.out_heads, concat=True)
+        self.f = nn.Linear(num_node_features, embedding_size)
+        self.conv = TransformerConv(
+            embedding_size, embedding_size, edge_dim=edge_dim, heads=heads, concat=True
+        )
 
     def forward(self, data):
         x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr
+        act_f = F.leaky_relu
 
-        h = self.conv1(x=x, edge_index=edge_index, edge_attr=edge_attr)
-        h = F.leaky_relu(h)
+        # Initial linear transformation
+        h = act_f(self.f(x))
 
-        h = self.conv2(x=h, edge_index=edge_index, edge_attr=edge_attr)
-        h = F.leaky_relu(h)
-
-        h = self.conv3(x=h, edge_index=edge_index, edge_attr=edge_attr)
+        # Reuse the same layer across iterations
+        for _ in range(3):  # 3 iterations
+            h = self.conv(x=h, edge_index=edge_index, edge_attr=edge_attr)
+            h = act_f(h)
 
         return h

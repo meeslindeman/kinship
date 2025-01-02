@@ -27,7 +27,7 @@ def run_experiment(opts: Options, target_folder: str, save: bool = True):
         'train_method': str(opts.mode),
         'layer': str(opts.layer),
         'random_seed': int(opts.random_seed),
-        'codebook_size': int(opts.codebook_size)
+        'data_seed': int(opts.data_seed),
         }
 
         # init wandb

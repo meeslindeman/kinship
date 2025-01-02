@@ -17,7 +17,7 @@ class Options:
     data_seed: int = 42
 
     # Game
-    distractors: int = 50 # default: 5
+    distractors: int = 31 # default: 5
     mode: str = 'continuous' # 'gs', 'rf' 'vq'
 
     # Agents
@@ -30,10 +30,10 @@ class Options:
     gs_tau: float = 1.0 # default: 1.0
 
     # Training
-    n_epochs: int = 200 
+    n_epochs: int = 20
     vocab_size: int = 100
     batch_size: int = 50
-    random_seed: int = 43
+    random_seed: int = 42
     learning_rate: float = 1e-3
 
     # Logging
