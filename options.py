@@ -14,7 +14,7 @@ class Options:
     padding_len: int = 80 # Depricated: used for topsim sequence generation
     edges_away: int = 3 # Depricated: used for random graph generation
     prune_graph: bool = False # True for pruning graph to bfs tree (keep only paths from ego to other nodes)
-    data_seed: int = 42
+    data_seed: int = 0
 
     # Game
     distractors: int = 31 # default: 5
@@ -24,15 +24,15 @@ class Options:
     embedding_size: int = 200 # default: 80
     heads: int = 1 # default: 4
     hidden_size: int = 200 # default: 20
-    sender_cell: str = 'lstm' # 'rnn', 'gru', 'lstm'
-    layer: str = 'gat' # 'gat', 'transform', 'rgcn'
+    sender_cell: str = 'gru' # 'rnn', 'gru', 'lstm'
+    layer: str = 'rgcn' # 'gat', 'transform', 'rgcn'
     max_len: int = 1 # default: 1
     gs_tau: float = 1.0 # default: 1.0
 
     # Training
-    n_epochs: int = 20
+    n_epochs: int = 10
     vocab_size: int = 100
-    batch_size: int = 50
+    batch_size: int = 500
     random_seed: int = 42
     learning_rate: float = 1e-3
 
@@ -47,7 +47,7 @@ class Options:
     evaluation: bool = False
     eval_distractors: int = None
     eval_batch_size: int = 1
-    evaluation_interval: int = 5
+    evaluation_interval: int = 10
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # Set this according to parameters in main.py

@@ -73,7 +73,7 @@ def results_to_dataframes(results: list, opts: Options, target_folder: str, save
     # Save DataFrames
     if save:
         metrics_df.to_csv(f'{target_folder}/metrics_{opts.mode}.csv', index=False)
-        # counts_df.to_csv(f'{target_folder}/counts.csv', index=False)
-        # evaluation_df.to_csv(f'{target_folder}/evaluation.csv', index=False)
+        counts_df.to_csv(f'{target_folder}/counts.csv', index=False)
+        evaluation_df.to_csv(f'{target_folder}/evaluation.csv', index=False)
 
     return metrics_df, counts_df, evaluation_df
