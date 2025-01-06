@@ -27,23 +27,23 @@ class Sender(nn.Module):
 
         self.vq = opts.mode == 'vq'
 
-        self.hidden_size = opts.hidden_size
-        self.vocab_size = opts.vocab_size
-        self.vq_layer = VectorQuantize(
-            dim=opts.hidden_size,
-            codebook_size=opts.vocab_size,
-            commitment_weight=0.2,
-            codebook_diversity_loss_weight=0.1,
-            decay=0.85
-        )
-        self.bn = nn.BatchNorm1d(self.hidden_size)
+        # self.hidden_size = opts.hidden_size
+        # self.vocab_size = opts.vocab_size
+        # self.vq_layer = VectorQuantize(
+        #     dim=opts.hidden_size,
+        #     codebook_size=opts.vocab_size,
+        #     commitment_weight=0.2,
+        #     codebook_diversity_loss_weight=0.1,
+        #     decay=0.85
+        # )
+        # self.bn = nn.BatchNorm1d(self.hidden_size)
 
-        # ==============================
-        self.plot_dir = f"pca_{opts.batch_size}"
-        os.makedirs(self.plot_dir, exist_ok=True)
-        self.plot_interval = 5000 // opts.batch_size // 2 # 5000 is dataset size, set manually, 2 is number of batches per epoch
-        self.batch_counter = 0
-        # ==============================
+        # # ==============================
+        # self.plot_dir = f"pca/pca_{opts.batch_size}"
+        # os.makedirs(self.plot_dir, exist_ok=True)
+        # self.plot_interval = 5000 // opts.batch_size // 2 # 5000 is dataset size, set manually, 2 is number of batches per epoch
+        # self.batch_counter = 0
+        # # ==============================
 
     def forward(self, x, _aux_input, finetune: bool=False):
         data = _aux_input
@@ -59,23 +59,20 @@ class Sender(nn.Module):
         target_embedding = torch.cat((h[adjusted_target_node_idx], h[adjusted_ego_idx]), dim=1)
         output = self.fc(target_embedding)
 
-        # norms = torch.norm(output, dim=-1).detach().cpu().numpy()
-        # print(f"Embedding Norms: Mean={norms.mean()}, Std={norms.std()}")
+        # if self.vq:
+        #     output = self.bn(output)
+        #     _, indices, commit_loss = self.vq_layer(output)
 
-        if self.vq:
-            output = self.bn(output)
-            _, indices, commit_loss = self.vq_layer(output)
+        #     # ==============================
+        #     num_unique_indices = len(torch.unique(indices))
+        #     #print(f"Number of unique codebook entries used: {len(torch.unique(indices))} / {self.vocab_size}")
+        #     self.batch_counter += 1
+        #     if self.batch_counter % self.plot_interval == 0:
+        #         self._pca_visualization(output, num_unique_indices)
+        #     # ==============================
 
-            # ==============================
-            num_unique_indices = len(torch.unique(indices))
-            #print(f"Number of unique codebook entries used: {len(torch.unique(indices))} / {self.vocab_size}")
-            self.batch_counter += 1
-            if self.batch_counter % self.plot_interval == 0:
-                self._pca_visualization(output, num_unique_indices)
-            # ==============================
-
-            output = F.one_hot(indices, self.vocab_size)
-            return output, commit_loss
+        #     output = F.one_hot(indices, self.vocab_size)
+        #     return output, commit_loss
         return output, None # batch_size x hidden_size
     
     def _pca_visualization(self, output, num_unique_indices):

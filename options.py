@@ -30,9 +30,9 @@ class Options:
     gs_tau: float = 1.0 # default: 1.0
 
     # Training
-    n_epochs: int = 10
+    n_epochs: int = 50
     vocab_size: int = 100
-    batch_size: int = 500
+    batch_size: int = 50
     random_seed: int = 42
     learning_rate: float = 1e-3
 

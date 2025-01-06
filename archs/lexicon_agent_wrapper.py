@@ -21,6 +21,16 @@ class LexiconSenderWrapper(nn.Module):
         self.agent = agent
         self.agent_type = agent_type
 
+        self.vocab_size = vocab_size
+        self.hidden_size = hidden_size
+        self.vq_layer = VectorQuantize(
+            dim=self.hidden_size,
+            codebook_size=self.vocab_size,
+            commitment_weight=0.2,
+            codebook_diversity_loss_weight=0.1,
+            decay=0.85
+        )
+
         if agent_type in ['rf', 'gs']:
             self.vocab_size = vocab_size
             self.lex_f = nn.Linear(hidden_size, vocab_size)
@@ -29,8 +39,11 @@ class LexiconSenderWrapper(nn.Module):
         output = self.agent(x, aux_input, finetune=not warm_up)
 
         if self.agent_type == 'vq':
-            h, loss = output
-            return h, loss
+            output, _ = output
+            output, indices, commit_loss = self.vq_layer(output)
+            print(f"Number of unique codebook entries used: {len(torch.unique(indices))} / {self.vocab_size}")
+            output = F.one_hot(indices, self.vocab_size)
+            return output, commit_loss
 
         h, _ = output
         if self.agent_type == 'continuous':
