@@ -22,14 +22,6 @@ class LexiconSenderWrapper(nn.Module):
         self.agent_type = agent_type
 
         self.vocab_size = vocab_size
-        self.hidden_size = hidden_size
-        self.vq_layer = VectorQuantize(
-            dim=self.hidden_size,
-            codebook_size=self.vocab_size,
-            commitment_weight=0.2,
-            codebook_diversity_loss_weight=0.1,
-            decay=0.85
-        )
 
         if agent_type in ['rf', 'gs']:
             self.vocab_size = vocab_size
