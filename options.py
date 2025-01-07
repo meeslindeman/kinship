@@ -14,10 +14,10 @@ class Options:
     padding_len: int = 80 # Depricated: used for topsim sequence generation
     edges_away: int = 3 # Depricated: used for random graph generation
     prune_graph: bool = False # True for pruning graph to bfs tree (keep only paths from ego to other nodes)
-    data_seed: int = 0
+    data_seed: int = 100
 
     # Game
-    distractors: int = 31 # default: 5
+    distractors: int = 50 # default: 5
     mode: str = 'continuous' # 'gs', 'rf' 'vq'
 
     # Agents
@@ -30,7 +30,7 @@ class Options:
     gs_tau: float = 1.0 # default: 1.0
 
     # Training
-    n_epochs: int = 50
+    n_epochs: int = 100
     vocab_size: int = 100
     batch_size: int = 50
     random_seed: int = 42
@@ -44,7 +44,7 @@ class Options:
     log_wandb: bool = False
 
     # Evaluation
-    evaluation: bool = False
+    evaluation: bool = True
     eval_distractors: int = None
     eval_batch_size: int = 1
     evaluation_interval: int = 10
