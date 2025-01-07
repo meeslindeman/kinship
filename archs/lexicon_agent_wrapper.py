@@ -39,11 +39,8 @@ class LexiconSenderWrapper(nn.Module):
         output = self.agent(x, aux_input, finetune=not warm_up)
 
         if self.agent_type == 'vq':
-            output, _ = output
-            output, indices, commit_loss = self.vq_layer(output)
-            print(f"Number of unique codebook entries used: {len(torch.unique(indices))} / {self.vocab_size}")
-            output = F.one_hot(indices, self.vocab_size)
-            return output, commit_loss
+            h, loss = output
+            return h, loss
 
         h, _ = output
         if self.agent_type == 'continuous':
