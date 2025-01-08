@@ -34,7 +34,7 @@ class Sender(nn.Module):
             codebook_size=opts.vocab_size,
             commitment_weight=0.2,
             codebook_diversity_loss_weight=0.1,
-            decay=0.85 #0.85
+            decay=0.2 #0.85
         )
         self.bn = nn.BatchNorm1d(self.hidden_size)
 
