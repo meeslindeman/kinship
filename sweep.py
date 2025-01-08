@@ -2,7 +2,6 @@ import wandb, logging, coloredlogs
 from pprint import pprint
 from options import Options
 from init import initialize_dataset_if_needed
-from analysis.timer import timer
 from analysis.save import results_to_dataframes
 from archs.game import get_game
 from archs.dataloader import get_loaders
@@ -57,30 +56,25 @@ def run_sweep_experiment(sweep_config: dict = None, save: bool = True):
         print(f"Dataset: {opts.root+opts.need_probs}")
 
         #Train
-        train_loader, valid_loader, eval_loader = get_loaders(opts, dataset) #todo have option to only return train adn validation, not eval
+        train_loader, valid_loader, eval_loader = get_loaders(opts, dataset)
         game = get_game(opts, dataset.num_node_features)
         results, trainer = perform_training(opts, train_loader, valid_loader, [], game) #no eval data
         metrics_df, counts_df, evaluation_df = results_to_dataframes(results, opts, target_folder, save)
 
         #Log to wandb
         for _, row in metrics_df.iterrows():
-            if row['mode'] == 'train':
-                log_data = {
-                    'epoch': row['epoch'],
-                    'metrics/train/loss': row['loss'],
-                    'metrics/train/accuracy': row['acc']
-                }
+            log_data = {
+                'epoch': row['epoch'],
+                f"metrics/{row['mode']}/loss": row['loss'],
+                f"metrics/{row['mode']}/accuracy": row['acc']
+            }
             wandb.log(log_data)
 
     return metrics_df
 
 def delete_failed_runs(project):
-
-    #Delete failed runs:
     api = wandb.Api()
-    # Fetch all runs for the specified project
     runs = api.runs(project)
-
     for run in runs:
         if run.state == 'failed':
             print(f'Deleting run {run.id} - {run.name}')
