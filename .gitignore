@@ -89,5 +89,3 @@ venv.bak/
 dmypy.json
 
 wandb/
-pca/
-pca_old/
