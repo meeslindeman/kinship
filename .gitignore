@@ -89,3 +89,4 @@ venv.bak/
 dmypy.json
 
 wandb/
+.idea/
