@@ -30,8 +30,9 @@ def set_options(config):
     #Add this one separately, as it's logged even when unused
     setattr(opts, 'codebook_size', config['vocab_size'])
 
-    #Disable test on evaluation data during search!
-    setattr(opts, 'evaluation', False)
+    #Eval opts
+    setattr(opts, 'evaluation', True)
+    setattr(opts, 'evaluation_interval', 10)
 
     return opts
 
@@ -58,7 +59,7 @@ def run_sweep_experiment(sweep_config: dict = None, save: bool = True):
         #Train
         train_loader, valid_loader, eval_loader = get_loaders(opts, dataset)
         game = get_game(opts, dataset.num_node_features)
-        results, trainer = perform_training(opts, train_loader, valid_loader, [], game) #no eval data
+        results, trainer = perform_training(opts, train_loader, valid_loader, eval_loader, game) #no eval data
         metrics_df, counts_df, evaluation_df = results_to_dataframes(results, opts, target_folder, save)
 
         #Log to wandb
@@ -66,8 +67,10 @@ def run_sweep_experiment(sweep_config: dict = None, save: bool = True):
             log_data = {
                 'epoch': row['epoch'],
                 f"metrics/{row['mode']}/loss": row['loss'],
-                f"metrics/{row['mode']}/accuracy": row['acc']
+                f"metrics/{row['mode']}/accuracy": row['acc'],
             }
+            if row['mode'] == 'train':
+                log_data['metrics/evaluation/eval_acc']=row.get('eval_acc', None)
             wandb.log(log_data)
 
     return metrics_df
@@ -85,7 +88,7 @@ if __name__ == "__main__":
     try:
         sweep_config = sweep_config_init()
         sweep_id = wandb.sweep(sweep_config, project='kinship')
-        wandb.agent(sweep_id, run_sweep_experiment)#, count=4)
+        wandb.agent(sweep_id, run_sweep_experiment, count=1)
     except BrokenPipeError:
         print('Failed to run sweep')
     finally:
