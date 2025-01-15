@@ -16,6 +16,7 @@ class LexiconSenderWrapper(nn.Module):
         agent_type: str,  # continuous, gs, rf
         vocab_size: Optional[int],
         hidden_size: Optional[int],
+        gs_tau: int=1
     ):
         super().__init__()
         self.agent = agent
@@ -26,6 +27,8 @@ class LexiconSenderWrapper(nn.Module):
         if agent_type in ['rf', 'gs']:
             self.vocab_size = vocab_size
             self.lex_f = nn.Linear(hidden_size, vocab_size)
+        if agent_type == 'gs': 
+            self.gs_tau = gs_tau
 
     def forward(self, x, aux_input=None, warm_up: bool=True):
         output = self.agent(x, aux_input, finetune=not warm_up)
@@ -49,7 +52,7 @@ class LexiconSenderWrapper(nn.Module):
                     return F.one_hot(output, self.vocab_size).float()
             else:
                 return gumbel_softmax_sample(
-                    lex_logit, 1, self.training, False
+                    lex_logit, self.gs_tau, self.training, False
                 )
 
         elif self.agent_type == 'rf':

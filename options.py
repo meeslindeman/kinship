@@ -27,10 +27,10 @@ class Options:
     sender_cell: str = 'gru' # 'rnn', 'gru', 'lstm'
     layer: str = 'rgcn' # 'gat', 'transform', 'rgcn'
     max_len: int = 1 # default: 1
-    gs_tau: float = 1.0 # default: 1.0
+    gs_tau: float = 1.5 # default: 1.0
 
     # Training
-    n_epochs: int = 100
+    n_epochs: int = 1000
     vocab_size: int = 100
     batch_size: int = 50
     random_seed: int = 42
