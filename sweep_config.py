@@ -10,7 +10,7 @@ def sweep_config_init():
     #grid, random or bayesian
     sweep_config = {
         'name' : f"{prefix}{timestamp}",
-        'method': 'random'
+        'method': 'grid'
     }
 
     #what sweep optimizes for
@@ -19,49 +19,52 @@ def sweep_config_init():
         'goal': 'minimize'
     }
 
+
     #hyperparams to explore
     parameters_dict = {
+        #Seeds
+        'data_seed' : {
+            'values': [100, 101, 102, 103, 104, 105]
+        },
+        'random_seed' : {
+            'values': [41,42,43,44,45],
+        },
         # Game
+        'prune_graph' : {
+            'values': [True],
+        },
         'distractors': {
-            'values': [15, 20, 30],
+            'values': [35, 5],
         },
         # Agents
         'embedding_size': {
-            'values': [256]#[128, 256, 384]
+            'values': [200]
         },
         'hidden_size': {
-            'values': [128] #[20, 40, 64, 128]
+            'values': [200],
         },
         'vocab_size':  {
-            'values': [15, 24, 64]
-        },
-        'gs_tau': {
-            'values': [0.85, 0.9, 0.95, 1.0]
+            'values': [100, 64, 32, 15]
         },
         # Training
         'mode':  {
             'values': ['gs']
         },
+        'gs_tau': {
+            'values': [1.5]
+        },
         'n_epochs':  {
-            'values': [11]
+            'values': [200]
         },
-        # 'learning_rate': {
-        #     'values': [0.01]
-        # },
-        'learning_rate':  {
-            'distribution': 'log_uniform',
-            'min': -6,
-            'max': -3
+        'learning_rate': {
+            'values': [1e-3]
         },
-        'batch_size':  {
-            'distribution': 'q_log_uniform',
-            'q': 1,
-            'min': math.log(16),
-            'max': math.log(100)
+        'batch_size': {
+            'values': [50]
         },
-        # 'batch_size': {
-        #     'values': [40]
-        # }
+        'max_len':{
+            'values': [1]
+        }
     }
 
     sweep_config['metric'] = metric
