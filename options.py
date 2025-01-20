@@ -18,7 +18,7 @@ class Options:
 
     # Game
     distractors: int = 50 # default: 5
-    mode: str = 'continuous' # 'gs', 'rf' 'vq'
+    mode: str = 'gs' # 'gs', 'rf' 'vq'
 
     # Agents
     embedding_size: int = 200 # default: 80
@@ -30,7 +30,7 @@ class Options:
     gs_tau: float = 1.5 # default: 1.0
 
     # Training
-    n_epochs: int = 1000
+    n_epochs: int = 200
     vocab_size: int = 100
     batch_size: int = 50
     random_seed: int = 42

@@ -111,6 +111,7 @@ class ResultsCollector(core.Callback):
                 # Collect data per target
                 per_target_data.append({
                     'ego_node': aux_input.ego_node[0],
+                    'target_node_idx': aux_input.target_node_idx[0].item(),
                     'target_node': aux_input.target_node[0],
                     'message': message,
                     'receiver_output': receiver_probs.cpu().numpy().tolist(),
@@ -170,6 +171,7 @@ class ResultsCollector(core.Callback):
 
     def _information_loss(self, counts):
         targets = [element['target_node'] for element in counts]
+        ids = [element['target_node_idx'] for element in counts]
         receiver_outputs = [output for element in counts for output in element['receiver_output']]
 
         need_probs = get_need_probs('dutch')
@@ -178,7 +180,7 @@ class ResultsCollector(core.Callback):
         information_loss = 0
 
         for i, target in enumerate(targets):
-            receiver_output = log2(receiver_outputs[i][0] + 1e-10)
+            receiver_output = log2(receiver_outputs[i][ids[i]] + 1e-10)
             target_prob = normalized_need_probs[target]
 
             cross_entropy = -target_prob * receiver_output

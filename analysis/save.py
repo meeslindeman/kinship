@@ -47,6 +47,7 @@ def results_to_dataframes(results: list, opts: Options, target_folder: str, save
                 evaluation.append({
                     'Epoch': eval_item.get('epoch'),
                     'Ego Node': eval_item.get('ego_node'),
+                    'Target Node Idx': eval_item.get('target_node_idx'),
                     'Target Node': eval_item.get('target_node'),
                     'Message': eval_item.get('message'),  # Could be a list or array
                     'Receiver Output': eval_item.get('receiver_output'),  # Long list of outputs
