@@ -21,16 +21,16 @@ class Options:
     mode: str = 'gs' # 'gs', 'rf' 'vq'
 
     # Agents
-    embedding_size: int = 200 # default: 80
+    embedding_size: int = 80 # default: 80
     heads: int = 1 # default: 4
-    hidden_size: int = 200 # default: 20
+    hidden_size: int = 20 # default: 20
     sender_cell: str = 'gru' # 'rnn', 'gru', 'lstm'
     layer: str = 'rgcn' # 'gat', 'transform', 'rgcn'
     max_len: int = 1 # default: 1
     gs_tau: float = 1.5 # default: 1.0
 
     # Training
-    n_epochs: int = 200
+    n_epochs: int = 500
     vocab_size: int = 100
     batch_size: int = 50
     random_seed: int = 42

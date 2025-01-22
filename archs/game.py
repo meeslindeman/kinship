@@ -35,8 +35,7 @@ def get_game(opts: Options, num_node_features: int):
     sender_wrapper = LexiconSenderWrapper(
         sender,
         opts.mode,
-        opts.vocab_size, opts.hidden_size, 
-        opts.gs_tau
+        opts.vocab_size, opts.hidden_size, opts.gs_tau
     )
     receiver_wrapper = LexiconReceiverWrapper(
         receiver,

@@ -58,6 +58,7 @@ class Sender(nn.Module):
         adjusted_target_node_idx = target_node_idx + batch_ptr[:-1]
         target_embedding = torch.cat((h[adjusted_target_node_idx], h[adjusted_ego_idx]), dim=1)
         output = self.fc(target_embedding)
+        #output = self.bn(output)
 
         if self.vq:
             # output = self.bn(output)

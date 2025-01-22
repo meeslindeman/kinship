@@ -16,11 +16,12 @@ class LexiconSenderWrapper(nn.Module):
         agent_type: str,  # continuous, gs, rf
         vocab_size: Optional[int],
         hidden_size: Optional[int],
-        gs_tau: int=1
+        gs_tau: float = 1.0
     ):
         super().__init__()
         self.agent = agent
         self.agent_type = agent_type
+        self.gs_tau = gs_tau
 
         self.vocab_size = vocab_size
 
