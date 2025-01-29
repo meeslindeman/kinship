@@ -21,7 +21,8 @@ def initialize_dataset_if_needed(opts: Options):
             need_probs=need_probs,
             seed=opts.data_seed
         )
-        print(f"Dataset {need_probs} initialized at {dataset_path}.")
+
+        print(f"Dataset {opts.need_probs} initialized at {dataset_path}.")
         print(f"Number of graphs: {len(dataset)}")
     else:
         print(f"Dataset found at {dataset_path}. Skipping initialization.")

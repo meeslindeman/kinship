@@ -1,8 +1,10 @@
 import torch
 import random
 import numpy as np
+import torch_geometric
 from torch_geometric.data import Dataset
 from graph.kemp_build import get_graph, update_age, update_sex, prune_graph
+import os
 
 class KempGraphDataset(Dataset):
     def __init__(
@@ -18,7 +20,8 @@ class KempGraphDataset(Dataset):
         self.number_of_graphs = number_of_graphs
         self.need_probs = need_probs
         self.seed = seed
-        np.random.seed(seed)
+        
+        torch_geometric.seed_everything(self.seed)
 
         super(KempGraphDataset, self).__init__(root, transform, pre_transform)
         
@@ -75,7 +78,7 @@ class KempGraphDataset(Dataset):
         update_sex(graph_data, ego_idx)
 
     def process(self, prune=False):
-        if True: # not os.path.isfile(self.processed_paths[0]):
+        if not os.path.isfile(self.processed_paths[0]):
             self.data = []
             for i in range(self.number_of_graphs):
                 graph_data, node_map = get_graph()

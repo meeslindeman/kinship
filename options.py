@@ -9,12 +9,12 @@ class Options:
     # Data
     root: str = 'data/'
     need_probs: str = 'uniform' # 'uniform', 'kemp', 'dutch -> see need prob plots
-    number_of_graphs: int = 5000 # default: 3200
+    number_of_graphs: int = 10000 # default: 3200
     generations: int = 3 # Depricated: used for random graph generation
     padding_len: int = 80 # Depricated: used for topsim sequence generation
     edges_away: int = 3 # Depricated: used for random graph generation
     prune_graph: bool = False # True for pruning graph to bfs tree (keep only paths from ego to other nodes)
-    data_seed: int = 100
+    data_seed: int = 42
 
     # Game
     distractors: int = 50 # default: 5
@@ -30,7 +30,7 @@ class Options:
     gs_tau: float = 1.5 # default: 1.0
 
     # Training
-    n_epochs: int = 500
+    n_epochs: int = 200
     vocab_size: int = 100
     batch_size: int = 50
     random_seed: int = 42

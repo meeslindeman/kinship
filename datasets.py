@@ -1,9 +1,7 @@
 from graph.kemp_dataset import KempGraphDataset
 
-dataset = KempGraphDataset('data/uniform_seed0', prune=False, seed=0)
-dataset1 = KempGraphDataset('data/uniform_seed25', prune=False, seed=25)
-dataset2 = KempGraphDataset('data/uniform_seed42', prune=False, seed=42)
-dataset3 = KempGraphDataset('data/uniform_seed100', prune=False, seed=100)
+dataset = KempGraphDataset('data/uniform_seed1', prune=False)
+dataset1 = KempGraphDataset('data/uniform_seed42', prune=False)
 
 from collections import Counter
 

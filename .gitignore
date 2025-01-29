@@ -92,3 +92,5 @@ wandb/
 data/
 results/
 .idea/
+kinship_dutch.xlsx
+language_complexity.ipynb
