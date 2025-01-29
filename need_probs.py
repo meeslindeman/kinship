@@ -1,6 +1,9 @@
+from collections import defaultdict
+
+
 def get_need_probs(need_probs_key):
-    need_probs_dict = {
-        'uniform': None,
+    need_count_dict = {
+        'uniform': {},
         'kemp': {
             'MM': 21, 'MF': 16, 'MZy': 5, 'MBy': 7, 'M': 432, 'MZe': 5, 'MBe': 7,
             'FM': 21, 'FF': 16, 'FZy': 5, 'FBy': 7, 'F': 438, 'FZe': 5, 'FBe': 7,
@@ -17,4 +20,8 @@ def get_need_probs(need_probs_key):
         }
     }
 
-    return need_probs_dict.get(need_probs_key, None)
+    counts = need_count_dict.get(need_probs_key, None)
+    return defaultdict(
+        lambda: 1e-10,
+        {u:c/sum(counts.values()) for u,c in counts.items()}
+    )
