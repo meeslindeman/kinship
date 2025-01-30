@@ -1,9 +1,8 @@
-import math
 import datetime
 
 def sweep_config_init():
 
-    prefix = "wAddedFeatures_"
+    prefix = ""
     timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
 
 
@@ -24,7 +23,7 @@ def sweep_config_init():
     parameters_dict = {
         #Seeds
         'data_seed' : {
-            'values': [100, 101, 102, 103, 104, 105]
+            'values': [104, 105]
         },
         'random_seed' : {
             'values': [41,42,43,44,45],
@@ -34,7 +33,7 @@ def sweep_config_init():
             'values': [True],
         },
         'distractors': {
-            'values': [35, 5],
+            'values': [5],
         },
         # Agents
         'embedding_size': {
@@ -44,7 +43,7 @@ def sweep_config_init():
             'values': [200],
         },
         'vocab_size':  {
-            'values': [100, 64, 32, 15]
+            'values': [100, 64, 32]
         },
         # Training
         'mode':  {
@@ -54,7 +53,7 @@ def sweep_config_init():
             'values': [1.5]
         },
         'n_epochs':  {
-            'values': [200]
+            'values': [300]
         },
         'learning_rate': {
             'values': [1e-3]
@@ -64,7 +63,8 @@ def sweep_config_init():
         },
         'max_len':{
             'values': [1]
-        }
+        },
+
     }
 
     sweep_config['metric'] = metric

@@ -30,10 +30,6 @@ def set_options(config):
     #Add this one separately, as it's logged even when unused
     setattr(opts, 'codebook_size', config['vocab_size'])
 
-    #Eval opts
-    setattr(opts, 'evaluation', True)
-    setattr(opts, 'evaluation_interval', 10)
-
     return opts
 
 def run_sweep_experiment(sweep_config: dict = None, save: bool = True):
@@ -59,21 +55,48 @@ def run_sweep_experiment(sweep_config: dict = None, save: bool = True):
         #Train
         train_loader, valid_loader, eval_loader = get_loaders(opts, dataset)
         game = get_game(opts, dataset.num_node_features)
-        results, trainer = perform_training(opts, train_loader, valid_loader, eval_loader, game) #no eval data
+        results, trainer = perform_training(opts, train_loader, valid_loader, eval_loader, game)
         metrics_df, counts_df, evaluation_df = results_to_dataframes(results, opts, target_folder, save)
 
-        #Log to wandb
-        for _, row in metrics_df.iterrows():
-            log_data = {
-                'epoch': row['epoch'],
-                f"metrics/{row['mode']}/loss": row['loss'],
-                f"metrics/{row['mode']}/accuracy": row['acc'],
-            }
-            if row['mode'] == 'train':
-                log_data['metrics/evaluation/eval_acc']=row.get('eval_acc', None)
-            wandb.log(log_data)
+        wandbLogResults(metrics_df, evaluation_df)
 
     return metrics_df
+
+def wandbLogResults(metrics_df, evaluation_df):
+
+    #Log to wandb
+    for _, row in metrics_df.iterrows():
+        log_data = {
+            'epoch': row['epoch'],
+            f"metrics/{row['mode']}/loss": row['loss'],
+            f"metrics/{row['mode']}/accuracy": row['acc'],
+        }
+        if row['mode'] == 'train':
+            log_data['metrics/evaluation/eval_acc']=row.get('eval_acc', None)
+        wandb.log(log_data)
+
+    table = wandb.Table(columns=[ "Complexity", "Information Loss", "Epoch"])
+
+    # Iterate over all epochs and accumulate data
+    for epoch in evaluation_df['Epoch'].unique():
+        # Filter data for the current epoch
+        epoch_data = evaluation_df[evaluation_df['Epoch'] == epoch]
+
+        # Extract unique Complexity and Information Loss for the epoch
+        complexity = epoch_data['Complexity'].iloc[0]
+        info_loss = epoch_data['Information Loss'].iloc[0]
+
+        wandb.log({
+            "eval metrics/Epoch": epoch,
+            "eval metrics/Complexity": complexity,
+            "eval metrics/Information Loss": info_loss
+        })
+
+        table.add_data(complexity, info_loss, epoch)
+
+    #wb.log({"eval metrics/": table})
+    wandb.log({"eval metrics/": wandb.plot.scatter(table, x="Complexity", y="Information Loss", title="Complexity vs Information Loss")})
+
 
 def delete_failed_runs(project):
     api = wandb.Api()
