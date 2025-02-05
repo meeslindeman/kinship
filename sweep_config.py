@@ -2,7 +2,7 @@ import datetime
 
 def sweep_config_init():
 
-    prefix = "deleteme"
+    prefix = "SeriousSweep"
     timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
 
 
@@ -41,7 +41,7 @@ def sweep_config_init():
             'values': [200],
         },
         'vocab_size':  {
-            'values': [100]#, 64, 32]
+            'values': [100, 64, 32, 15]
         },
         # Training
         'mode':  {
@@ -51,7 +51,7 @@ def sweep_config_init():
             'values': [1.5]
         },
         'n_epochs':  {
-            'values': [11]
+            'values': [200]
         },
         'learning_rate': {
             'values': [1e-3]
@@ -60,7 +60,7 @@ def sweep_config_init():
             'values': [50]
         },
         'max_len':{
-            'values': [1]
+            'values': [1,2,3]
         }
 
     }

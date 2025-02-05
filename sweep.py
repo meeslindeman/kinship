@@ -1,5 +1,6 @@
 import wandb, logging, coloredlogs
 from pprint import pprint
+import gzip, shutil, zipfile
 from options import Options
 from init import initialize_dataset_if_needed
 from analysis.save import results_to_dataframes
@@ -42,7 +43,6 @@ def set_options(config):
 
 def wandbLogResults(metrics_df, evaluation_df, lang=''):
 
-    #metrics_df: complexity@lang , information_loss@lang, eval_acc@lang
     for _, row in metrics_df.iterrows():
         log_data = {
             'epoch': row['epoch'],
@@ -56,6 +56,13 @@ def wandbLogResults(metrics_df, evaluation_df, lang=''):
                 log_data[f"metrics/evaluation/eval_acc"]=row.get(f"eval_acc", None)
         wandb.log(log_data)
 
+    #Add output file with messages
+    opath="results/uniform/evaluation"
+    with zipfile.ZipFile(opath+".zip", "w", zipfile.ZIP_DEFLATED) as zipf:
+        zipf.write(opath+".csv", opath)
+    artifact = wandb.Artifact("evaluation", type="dataset")
+    artifact.add_file("results/uniform/evaluation.zip", name="evaluation.zip")
+    wandb.log_artifact(artifact)
 
 #       Log Complexity&InfoLoss (removed for now -- we compute them at the end)
 #      table = wandb.Table(columns=[ "Complexity", "Information Loss", "Epoch"])
