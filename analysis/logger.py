@@ -30,9 +30,10 @@ class ResultsCollector(core.Callback):
                 train_metrics['evaluation'] = eval_logs['evaluation']
 
                 results = self._compute_complexity_infoloss_accuracy_emerged_language(eval_logs['evaluation'])
-                train_metrics[f'eval_acc@{self.language}'] = results['accuracy']
-                train_metrics[f'complexity@{self.language}'] = results['complexity']
-                train_metrics[f'information_loss@{self.language}'] = results['information_loss']
+                # train_metrics[f'eval_acc@{self.language}'] = results['accuracy']
+                # train_metrics[f'complexity@{self.language}'] = results['complexity']
+                # train_metrics[f'information_loss@{self.language}'] = results['information_loss']
+                train_metrics[f'eval_acc'] = results['accuracy']
 
             if self.options.messages:
                 messages = self._messages_to_indices(logs.message)

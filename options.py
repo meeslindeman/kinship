@@ -13,7 +13,7 @@ class Options:
     generations: int = 3 # Depricated: used for random graph generation
     padding_len: int = 80 # Depricated: used for topsim sequence generation
     edges_away: int = 3 # Depricated: used for random graph generation
-    prune_graph: bool = False # True for pruning graph to bfs tree (keep only paths from ego to other nodes)
+    prune_graph: bool = True # True for pruning graph to bfs tree (keep only paths from ego to other nodes)
     data_seed: int = 42
 
     # Game

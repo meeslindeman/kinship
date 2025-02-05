@@ -2,7 +2,7 @@ import datetime
 
 def sweep_config_init():
 
-    prefix = ""
+    prefix = "deleteme"
     timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
 
 
@@ -21,12 +21,10 @@ def sweep_config_init():
 
     #hyperparams to explore
     parameters_dict = {
-        #Seeds
-        'data_seed' : {
-            'values': [104, 105]
-        },
+
+        #Seed
         'random_seed' : {
-            'values': [41,42,43,44,45],
+            'values': [51,52,53,54,55]
         },
         # Game
         'prune_graph' : {
@@ -43,7 +41,7 @@ def sweep_config_init():
             'values': [200],
         },
         'vocab_size':  {
-            'values': [100, 64, 32]
+            'values': [100]#, 64, 32]
         },
         # Training
         'mode':  {
@@ -53,7 +51,7 @@ def sweep_config_init():
             'values': [1.5]
         },
         'n_epochs':  {
-            'values': [300]
+            'values': [11]
         },
         'learning_rate': {
             'values': [1e-3]
@@ -63,7 +61,7 @@ def sweep_config_init():
         },
         'max_len':{
             'values': [1]
-        },
+        }
 
     }
 
