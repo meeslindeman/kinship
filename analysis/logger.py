@@ -228,7 +228,7 @@ class ResultsCollector(core.Callback):
         target_message = [{
             'target': x['target_node'],
             'message': tuple(x['message'])
-        } for x in counts if x['ego'] == ego]
+        } for x in counts if x['ego_node'] == ego]
         (
             p_target,
             p_sender_message_given_target,
