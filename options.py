@@ -21,7 +21,7 @@ class Options:
     mode: str = 'gs' # 'gs', 'rf' 'vq'
 
     # Agents
-    embedding_size: int = 80 # default: 80
+    embedding_size: int = 200 # default: 80
     heads: int = 1 # default: 4
     hidden_size: int = 20 # default: 20
     sender_cell: str = 'gru' # 'rnn', 'gru', 'lstm'
