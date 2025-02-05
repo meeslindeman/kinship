@@ -49,6 +49,7 @@ class Options:
     eval_batch_size: int = 1
     evaluation_interval: int = 10
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
+    language: str = 'dutch'
 
     # Set this according to parameters in main.py
     def __str__(self):

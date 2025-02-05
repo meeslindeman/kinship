@@ -144,7 +144,7 @@ class Receiver(nn.Module):
         log_probabilities = F.log_softmax(dot_products, dim=1)
 
         # elimintate all nodes that are neither distractors or target
-        mask = torch.zeros(batch_size * num_candidates)
+        mask = torch.zeros(batch_size * num_candidates).to(log_probabilities.device)
         mask[indices] = 1
         mask = mask.view(batch_size, -1)
         log_probabilities = log_probabilities - (1 - mask) * 1e5

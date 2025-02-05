@@ -31,6 +31,8 @@ def get_game(opts: Options, num_node_features: int):
 
     sender = Sender(num_node_features, opts)
     receiver = Receiver(num_node_features, opts)
+    sender.to(opts.device)
+    receiver.to(opts.device)
 
     sender_wrapper = LexiconSenderWrapper(
         sender,

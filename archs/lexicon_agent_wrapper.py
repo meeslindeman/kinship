@@ -66,8 +66,8 @@ class LexiconSenderWrapper(nn.Module):
                 output = distr.sample()
                 logit = distr.log_prob(output)
 
-                explore_chance = torch.rand(output.shape)
-                explore_output = torch.randint(low=0, high=self.vocab_size, size=output.shape)
+                explore_chance = torch.rand(output.shape).to(entropy.device)
+                explore_output = torch.randint(low=0, high=self.vocab_size, size=output.shape).to(entropy.device)
                 explore_entropy = torch.zeros_like(entropy)
                 explore_logit = torch.zeros_like(logit)
 
