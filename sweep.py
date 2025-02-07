@@ -56,6 +56,29 @@ def wandbLogResults(metrics_df, evaluation_df, lang=''):
                 log_data[f"metrics/evaluation/eval_acc"]=row.get(f"eval_acc", None)
         wandb.log(log_data)
 
+    # Log Complexity&InfoLoss
+    table = wandb.Table(columns=[ "Complexity", "Information Loss", "Epoch"])
+
+    # Iterate over all epochs and accumulate data
+    for epoch in evaluation_df['Epoch'].unique():
+        # Filter data for the current epoch
+        epoch_data = evaluation_df[evaluation_df['Epoch'] == epoch]
+
+        # Extract unique Complexity and Information Loss for the epoch
+        complexity = epoch_data['Complexity'].iloc[0]
+        info_loss = epoch_data['Information Loss'].iloc[0]
+
+        wandb.log({
+            "eval metrics/Epoch": epoch,
+            "eval metrics/Complexity": complexity,
+            "eval metrics/Information Loss": info_loss
+        })
+
+        table.add_data(complexity, info_loss, epoch)
+
+    #wb.log({"eval metrics/": table})
+    wandb.log({"eval metrics/": wandb.plot.scatter(table, x="Complexity", y="Information Loss", title="Complexity vs Information Loss")})
+
     #Add output file with messages
     opath="results/uniform/evaluation"
     with zipfile.ZipFile(opath+".zip", "w", zipfile.ZIP_DEFLATED) as zipf:
@@ -63,29 +86,6 @@ def wandbLogResults(metrics_df, evaluation_df, lang=''):
     artifact = wandb.Artifact("evaluation", type="dataset")
     artifact.add_file("results/uniform/evaluation.zip", name="evaluation.zip")
     wandb.log_artifact(artifact)
-
-#       Log Complexity&InfoLoss (removed for now -- we compute them at the end)
-#      table = wandb.Table(columns=[ "Complexity", "Information Loss", "Epoch"])
-
-#     # Iterate over all epochs and accumulate data
-#     for epoch in evaluation_df['Epoch'].unique():
-#         # Filter data for the current epoch
-#         epoch_data = evaluation_df[evaluation_df['Epoch'] == epoch]
-
-#         # Extract unique Complexity and Information Loss for the epoch
-#         complexity = epoch_data['Complexity'].iloc[0]
-#         info_loss = epoch_data['Information Loss'].iloc[0]
-
-#         wandb.log({
-#             "eval metrics/Epoch": epoch,
-#             "eval metrics/Complexity": complexity,
-#             "eval metrics/Information Loss": info_loss
-#         })
-
-#         table.add_data(complexity, info_loss, epoch)
-
-#     #wb.log({"eval metrics/": table})
-#     wandb.log({"eval metrics/": wandb.plot.scatter(table, x="Complexity", y="Information Loss", title="Complexity vs Information Loss")})
 
 
 def run_sweep_experiment(sweep_config: dict = None, save: bool = True):
@@ -131,7 +131,7 @@ if __name__ == "__main__":
     try:
         sweep_config = sweep_config_init()
         sweep_id = wandb.sweep(sweep_config, project='kinship')
-        wandb.agent(sweep_id, run_sweep_experiment)#, count=1)
+        wandb.agent(sweep_id, run_sweep_experiment, count=1)
     except BrokenPipeError:
         print('Failed to run sweep')
     finally:

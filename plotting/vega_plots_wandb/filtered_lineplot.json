@@ -1,0 +1,31 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
+  "data": {
+    "name": "wandb"
+  },
+  "title": "Max Length = 1",
+  "mark": "point",
+  "transform": [
+    {
+      "filter": "datum.max_len == 1"
+    }
+  ],
+
+  "encoding": {
+    "x": {
+      "title" : "Epoch",
+      "field": "${field:x-axis}",
+      "type": "quantitative"
+    },
+    "y": {
+      "title" : "Eval Accuracy",
+      "field": "${field:y-axis}",
+      "type": "quantitative"
+    },
+    "color": {
+      "title" : "Vocab Size",
+      "field": "${field:color}",
+      "type": "nominal"
+    }
+  }
+}

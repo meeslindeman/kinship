@@ -2,7 +2,7 @@ import datetime
 
 def sweep_config_init():
 
-    prefix = "SeriousSweep"
+    prefix = "deleteme"
     timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
 
 

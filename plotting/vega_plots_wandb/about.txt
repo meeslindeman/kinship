@@ -1,0 +1,41 @@
+- Custom Plots in wandb:
+Very buggy! If nonsense happens, start it over.
+1. edit DATASOURCE with relevant variables
+(needs to be done with point and click, because that's why you want code for...)
+
+untabbed version:
+
+query {
+runSets
+(runSets: "${runSets}",limit: 500)
+ {
+id
+name
+history
+(keys: [
+"epoch","metrics/evaluation/eval_acc"]
+)
+config
+(keys: ["max_len","vocab_size"]
+)
+}
+}
+
+
+2. edit plot specs
+Copy code (e.g. filtered_lineplot.json) & then select x, y and color manually (...)
+
+3. Important:
+- When closing editor, everything will disappear.
+- When saving to workspace, there will be an error.
+- When saving to report, there will be an error.
+The only way to keep the custom plot is to save it as a new preset. This will in turn save it in the workspace.
+Any edit on a preset needs to be saved (?!), otherwise you end up with two identical plots.
+So a new preset is necessary for e.g. every parameter value (?!)
+
+Saved presets ids:
+koala-lab/plot_with_filtered_config_values
+
+Custom plots via presets can be created from workspace and sent to reports.
+It's slow and ugly but it seems the only way to create custom plots.
+
