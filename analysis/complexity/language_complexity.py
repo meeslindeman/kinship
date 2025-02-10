@@ -1,4 +1,5 @@
 import os
+import itertools
 import pandas as pd 
 from pandas import isna
 from collections import defaultdict
@@ -113,7 +114,7 @@ def compute_metrics_nl(natural_language_file: str):
     ), p_u
 
 
-def compute_metrics_el(path: str, need_prob, ego):
+def compute_metrics_el(path: str, need_prob, ego, thr=1e-4):
     p_u = need_prob
     all_df = pd.read_csv(path)
     eme_lang = []
@@ -136,9 +137,9 @@ def compute_metrics_el(path: str, need_prob, ego):
 
         # make sure that p_u == p_sender_u
         for u, p in p_u.items():
-            assert abs(p_sender_u[u] - p) < 1e-5, f"{[u, p, p_sender_u[u]]}"
+            assert abs(p_sender_u[u] - p) < thr, f"{[u, p, p_sender_u[u]]}"
         for u, p in p_sender_u.items():
-            assert abs(p_u[u] - p) < 1e-5, f"{[u, p, p_u[u]]}"
+            assert abs(p_u[u] - p) < thr, f"{[u, p, p_u[u]]}"
 
         p_receiver_u_w = defaultdict(lambda: defaultdict(lambda: 1e-10))
         outputs = {}
@@ -151,7 +152,7 @@ def compute_metrics_el(path: str, need_prob, ego):
             if w not in outputs:
                 outputs[w] = receiver_output
             else: 
-                assert all(abs(o-r)<1e-5 for o, r in zip(outputs[w], receiver_output)), \
+                assert all(abs(o-r)<thr for o, r in zip(outputs[w], receiver_output)), \
                     [abs(o-r) for o, r in zip(outputs[w], receiver_output)]
             
             for uidx in range(len(receiver_output)):
@@ -187,7 +188,8 @@ def plot_all(
     el_metrics = {}
     for name, file in emerged_languages_files.items(): 
         el_metrics[name] = compute_metrics_el(file, need_prob, ego)
-        
+
+    fig, ax = plt.subplots()
 
     # draw optimal boundary
     # information loss = - complexity + entropy(u)
@@ -196,34 +198,47 @@ def plot_all(
     plt.plot([0, entropy_u], [entropy_u, 0], '--b')
 
     # plot natural language
-    plt.scatter([nl_metrics['complexity']], [nl_metrics['info loss']], color='green')
+    plt.scatter([nl_metrics['complexity']], [nl_metrics['info loss']],
+                marker='D',
+                color='black')
 
     # plot emerged languages
     def get_distinguishable_colors(n, cmap_name="tab10"):
         cmap = plt.get_cmap(cmap_name)
         return [cmap(i / n) for i in range(n)]
-    for el, color in zip(el_metrics.values(), 
-                        get_distinguishable_colors(len(emerged_languages_files))):
-        plt.scatter(
+    colors=get_distinguishable_colors(len(emerged_languages_files))
+    for el, color in zip(el_metrics.values(),
+                        colors):
+        ax=plt.scatter(
             [x['metrics']['complexity'] for x in el], 
             [x['metrics']['info loss'] for x in el], 
             color=color
         )
 
-    for el in el_metrics.values():
+
+    for s,el in enumerate(el_metrics.values()):
         for i in range(len(el)):
             l1, l2 = el[i-1]['metrics'], el[i]['metrics']
-            if i > 0: 
+            if i==1:
+                #replace marker initial state
+                plt.scatter(l1['complexity'], l1['info loss'],
+                            marker='o', facecolors='none', edgecolors=colors[s], s=100)  # Square marker, larger size
+            #add arrows
+            if i > 0:
                 plt.arrow(
                     l1['complexity'], l1['info loss'], 
                     l2['complexity'] - l1['complexity'],
                     l2['info loss'] - l1['info loss'],
                     shape='full', lw=0.1, length_includes_head=True, head_width=.05
                 )
+            if i==(len(el)-1):
+                #replace marker final state
+                plt.scatter(l2['complexity'], l2['info loss'],
+                            marker='D', facecolors='none', edgecolors=colors[s], s=100)
 
-    plt.title(f"{ego} {run_info}")
-    plt.xlabel('complexity (bits)')
-    plt.ylabel('information loss (bits)')
+    plt.title(f"Ego:{ego} \n({run_info})".replace("_"," "))
+    plt.xlabel('Complexity (bits)')
+    plt.ylabel('Information loss (bits)')
     plt.legend(['optimal', natural_language_name] + list(el_metrics.keys()))
     plt.grid()
     plt.savefig(cplx_infoloss_plot_file)
@@ -233,34 +248,49 @@ def plot_all(
 
     # plot accuracy
 
+    fig, ax = plt.subplots()
     # plot natural language
     plt.axhline(y=nl_metrics['accuracy'], color='b', linestyle='--', linewidth=2)
 
     # plot emerged language
-    for el, color in zip(el_metrics.values(), ['orange', 'red', 'black', 'purple']):
+    for el, color in zip(el_metrics.values(), colors):
         plt.plot(
             [x['epoch'] for x in el], 
             [x['metrics']['accuracy'] for x in el], 
             color=color
         )
 
-    plt.title(f"{ego} {run_info}")
-    plt.xlabel('epoch')
-    plt.ylabel('accuracy')
+    plt.title(f"Ego:{ego} \n({run_info})".replace("_"," "))
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
     plt.legend([natural_language_name] + list(el_metrics.keys()))
     plt.grid()
     plt.savefig(acc_plot_file)
 
 
 if __name__ == '__main__':
-    plot_all(
-        natural_language_file='/home/phongle/workspace/kinship/kinship/kinship_dutch.xlsx', 
-        natural_language_name='dutch', 
-        emerged_languages_files={
-            '100-distractor': '/home/phongle/workspace/kinship/kinship/results/uniform42/evaluation.csv',
-        }, 
-        ego='Alice',
-        cplx_infoloss_plot_file='cplx_infoloss.png',
-        acc_plot_file='acc.png',
-        run_info='vocab_32'
-    )
+
+    natural_language_file = '../../kinship_dutch.xlsx'
+    natural_language_name = 'dutch'
+    sweep_name="SeriousSweep20250205_170552"
+    seeds=[51, 52, 53, 54, 55]
+    vocab_sizes=[15,32,64,100]
+    max_lens=[1,2,3]
+
+
+    for v,l in itertools.product(vocab_sizes, max_lens):
+        run_info=f"vocab_size_{v}_max_len_{l}"
+        eval_path=f"../../results/uniform/outputs_{sweep_name}/{run_info}/"
+        emerged_languages_files = { f"seed{s}":
+                                    os.path.join(eval_path,f"evaluation_{run_info}_seed_{s}.csv")
+                                for s in seeds }
+        for ego in ('Alice', 'Bob'):
+            plot_all(
+                natural_language_file=natural_language_file,
+                natural_language_name=natural_language_name,
+                emerged_languages_files=emerged_languages_files,
+                ego=ego,
+                cplx_infoloss_plot_file=f'cplx_infoloss{run_info}_{ego}.png',
+                acc_plot_file=f'acc{run_info}_{ego}.png',
+                run_info=run_info
+            )
