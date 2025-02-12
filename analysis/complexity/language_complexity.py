@@ -7,8 +7,9 @@ from itertools import product
 from math import log2
 import json
 from matplotlib import pyplot as plt
+import numpy as np
 
-
+    
 # node mapping
 NODES = [
     'MM', 'MF', 'MZy', 'MBy', 'M', 'MZe', 'MBe',
@@ -18,6 +19,7 @@ NODES = [
     'DD', 'DS', 'SD', 'SS'
 ]
 
+N_SKIPED_EPOCHS = 50
 
 
 def estimate_prob_given_count(counts):
@@ -119,7 +121,7 @@ def compute_metrics_el(path: str, need_prob, ego, thr=1e-4):
     all_df = pd.read_csv(path)
     eme_lang = []
     
-    for epoch in range(0, 10000):
+    for epoch in range(0, 10000, N_SKIPED_EPOCHS):
         df = all_df[(all_df.Epoch == epoch) & (all_df["Ego Node"] == ego)]
         if df.shape[0] == 0:
             continue
@@ -206,20 +208,26 @@ def plot_all(
     def get_distinguishable_colors(n, cmap_name="tab10"):
         cmap = plt.get_cmap(cmap_name)
         return [cmap(i / n) for i in range(n)]
+
     colors=get_distinguishable_colors(len(emerged_languages_files))
-    for el, color in zip(el_metrics.values(),
-                        colors):
-        ax=plt.scatter(
+    
+    for el, color in zip(el_metrics.values(), colors):
+        base_color = color[0:3]
+        alphas = np.linspace(0.2, 1, len(el))
+        color_range = np.column_stack(
+            [np.tile(base_color, (len(el), 1)), alphas]
+        )  # (N, 4) shape
+        ax = plt.scatter(
             [x['metrics']['complexity'] for x in el], 
             [x['metrics']['info loss'] for x in el], 
-            color=color
+            color=color_range
         )
 
 
-    for s,el in enumerate(el_metrics.values()):
+    for s, el in enumerate(el_metrics.values()):
         for i in range(len(el)):
             l1, l2 = el[i-1]['metrics'], el[i]['metrics']
-            if i==1:
+            if i == 1:
                 #replace marker initial state
                 plt.scatter(l1['complexity'], l1['info loss'],
                             marker='o', facecolors='none', edgecolors=colors[s], s=100)  # Square marker, larger size
@@ -231,7 +239,7 @@ def plot_all(
                     l2['info loss'] - l1['info loss'],
                     shape='full', lw=0.1, length_includes_head=True, head_width=.05
                 )
-            if i==(len(el)-1):
+            if i == len(el)-1:
                 #replace marker final state
                 plt.scatter(l2['complexity'], l2['info loss'],
                             marker='D', facecolors='none', edgecolors=colors[s], s=100)
@@ -243,7 +251,6 @@ def plot_all(
     plt.grid()
     plt.savefig(cplx_infoloss_plot_file)
     plt.close()
-
 
 
     # plot accuracy
@@ -268,8 +275,21 @@ def plot_all(
     plt.savefig(acc_plot_file)
 
 
-if __name__ == '__main__':
+def example():
+    plot_all(
+        natural_language_file='/home/phongle/workspace/kinship/kinship/kinship_dutch.xlsx', 
+        natural_language_name='dutch', 
+        emerged_languages_files={
+            '100-distractor': '/home/phongle/workspace/kinship/kinship/results/uniform42/evaluation.csv',
+        }, 
+        ego='Alice',
+        cplx_infoloss_plot_file='cplx_infoloss.png',
+        acc_plot_file='acc.png',
+        run_info='vocab_32'
+    )
 
+    
+def main():
     natural_language_file = '../../kinship_dutch.xlsx'
     natural_language_name = 'dutch'
     sweep_name="SeriousSweep20250205_170552"
@@ -294,3 +314,7 @@ if __name__ == '__main__':
                 acc_plot_file=f'acc{run_info}_{ego}.png',
                 run_info=run_info
             )
+
+if __name__ == "__main__":
+    example()
+    # main()
