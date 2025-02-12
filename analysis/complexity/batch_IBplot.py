@@ -41,5 +41,6 @@ if __name__ == '__main__':
                 ego=ego,
                 cplx_infoloss_plot_file=f'cplx_infoloss{run_info}_{ego}.png',
                 acc_plot_file=f'acc{run_info}_{ego}.png',
-                run_info=run_info
+                run_info=run_info,
+                out_path=f"../../results/uniform/outputs_{sweep_name}"
             )

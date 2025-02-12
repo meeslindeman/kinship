@@ -181,7 +181,8 @@ def plot_all(
     ego,
     cplx_infoloss_plot_file,
     acc_plot_file,
-    run_info
+    run_info,
+    out_path=""
 ):
     # compute metrics for natural language
     nl_metrics, need_prob = compute_metrics_nl(natural_language_file)
@@ -249,7 +250,7 @@ def plot_all(
     plt.ylabel('Information loss (bits)')
     plt.legend(['optimal', natural_language_name] + list(el_metrics.keys()))
     plt.grid()
-    plt.savefig(cplx_infoloss_plot_file)
+    plt.savefig(os.path.join(out_path,cplx_infoloss_plot_file))
     plt.close()
 
 
@@ -272,12 +273,13 @@ def plot_all(
     plt.ylabel('Accuracy')
     plt.legend([natural_language_name] + list(el_metrics.keys()))
     plt.grid()
-    plt.savefig(acc_plot_file)
+    plt.savefig(os.path.join(out_path,acc_plot_file))
+    plt.close()
 
 
 def example():
     plot_all(
-        natural_language_file='/home/phongle/workspace/kinship/kinship/kinship_dutch.xlsx', 
+        natural_language_file='/home/phongle/workspace/kinship/kinship/kinship_dutch.xlsx',
         natural_language_name='dutch', 
         emerged_languages_files={
             '100-distractor': '/home/phongle/workspace/kinship/kinship/results/uniform42/evaluation.csv',
@@ -312,9 +314,10 @@ def main():
                 ego=ego,
                 cplx_infoloss_plot_file=f'cplx_infoloss{run_info}_{ego}.png',
                 acc_plot_file=f'acc{run_info}_{ego}.png',
-                run_info=run_info
+                run_info=run_info,
+                out_path=f"../../results/uniform/outputs_{sweep_name}"
             )
 
 if __name__ == "__main__":
-    example()
-    # main()
+   # example()
+    main()
