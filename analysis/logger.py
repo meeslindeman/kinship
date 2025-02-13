@@ -28,11 +28,13 @@ class ResultsCollector(core.Callback):
             if self.options.evaluation:
                 eval_logs = self.evaluate(epoch)
                 train_metrics['evaluation'] = eval_logs['evaluation']
+                train_metrics['eval_acc'] = eval_logs['accuracy']
 
-                results = self._compute_complexity_infoloss_accuracy_emerged_language(eval_logs['evaluation'])
-                train_metrics[f'eval_acc@{self.language}'] = results['accuracy']
-                train_metrics[f'complexity@{self.language}'] = results['complexity']
-                train_metrics[f'information_loss@{self.language}'] = results['information_loss']
+                for ego in ['Bob', 'Alice']:
+                    results = self._compute_complexity_infoloss_accuracy_emerged_language(eval_logs['evaluation'], ego)
+                    train_metrics[f'eval_acc@{self.language}@{ego}'] = results['accuracy']
+                    train_metrics[f'complexity@{self.language}@{ego}'] = results['complexity']
+                    train_metrics[f'information_loss@{self.language}@{ego}'] = results['information_loss']
 
             if self.options.messages:
                 messages = self._messages_to_indices(logs.message)
@@ -222,11 +224,11 @@ class ResultsCollector(core.Callback):
             p_target_given_message
         )
 
-    def _compute_complexity_infoloss_accuracy_emerged_language(self, counts):
+    def _compute_complexity_infoloss_accuracy_emerged_language(self, counts, ego):
         target_message = [{
             'target': x['target_node'],
             'message': tuple(x['message'])
-        } for x in counts]
+        } for x in counts if x['ego_node'] == ego]
         (
             p_target,
             p_sender_message_given_target,
@@ -237,7 +239,14 @@ class ResultsCollector(core.Callback):
         for x in counts:
             idx, u, w = x['target_node_idx'], x['target_node'], tuple(x['message'])
             receiver_output = x['receiver_output'][0]
-            p_receiver_target_given_message[w][u] = receiver_output[idx]
+
+            for uidx in range(len(receiver_output)):
+                p_receiver_target_given_message[w][NODES[uidx]] += max(1e-10, receiver_output[uidx])
+
+        for w in p_receiver_target_given_message.keys():
+            total = sum(p_receiver_target_given_message[w].values())
+            for u in p_receiver_target_given_message[w].keys():
+                p_receiver_target_given_message[w][u] /= total
 
         return self._compute_complexity_infoloss_accuracy(
             target_message,
