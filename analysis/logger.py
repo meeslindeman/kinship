@@ -18,6 +18,13 @@ class ResultsCollector(core.Callback):
         self.results = []
         self.language = options.language
         self.natural_language_profile = self._load_natural_languge_profile(self.language)
+        self.calc_topsim = core.TopographicSimilarity(
+            sender_input_distance_fn="edit",
+            message_distance_fn="edit",
+            compute_topsim_train_set=False,
+            compute_topsim_test_set=True,
+            is_gumbel=True
+        )
 
         self.print_train_loss = kwargs.get('print_train_loss', True)
 
@@ -48,6 +55,11 @@ class ResultsCollector(core.Callback):
 
     def on_validation_end(self, loss: float, logs: core.Interaction, epoch: int):
         test_metrics = self._aggregate_metrics(loss, logs, "test", epoch)
+        # leave out for now
+        # topsim = self.calc_topsim.compute_topsim(
+        #     torch.flatten(logs.sender_input, start_dim=1), 
+        #     logs.message.argmax(dim=-1) if self.topsim_calculator.is_gumbel else logs.message
+        # )
         self.results.append(test_metrics)
         self._print_to_console({k: v for k, v in test_metrics.items()})
 

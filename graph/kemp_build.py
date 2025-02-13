@@ -1,7 +1,6 @@
 import torch
 from torch_geometric.data import Data
 
-
 NODES = [
     'MM', 'MF', 'MZy', 'MBy', 'M', 'MZe', 'MBe',
     'FM', 'FF', 'FZy', 'FBy', 'F', 'FZe', 'FBe',
