@@ -21,12 +21,12 @@ class Options:
     mode: str = 'gs' # 'gs', 'rf' 'vq'
 
     # Agents
-    embedding_size: int = 200 # default: 80
+    embedding_size: int = 80 # default: 80
     heads: int = 1 # default: 4
     hidden_size: int = 20 # default: 20
     sender_cell: str = 'gru' # 'rnn', 'gru', 'lstm'
-    layer: str = 'gat' # 'gat', 'transform', 'rgcn'
-    max_len: int = 1 # default: 1
+    layer: str = 'rgcn' # 'gat', 'transform', 'rgcn'
+    max_len: int = 2 # default: 1
     gs_tau: float = 1.5 # default: 1.0
 
     # Training
@@ -47,7 +47,7 @@ class Options:
     evaluation: bool = True
     eval_distractors: int = None
     eval_batch_size: int = 1
-    evaluation_interval: int = 10
+    evaluation_interval: int = 2
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
     language: str = 'dutch'
 

@@ -15,21 +15,50 @@ class LexiconSenderWrapper(nn.Module):
         agent: nn.Module,
         agent_type: str,  # continuous, gs, rf
         vocab_size: Optional[int],
+        embed_size: Optional[int],
         hidden_size: Optional[int],
-        gs_tau: float = 1.0
+        max_len: Optional[int],
+        temp: float = 1.0,
+        cell: str = 'rnn',
+        trainable_temp: bool = False,
+        straight_through: bool = False,
     ):
         super().__init__()
         self.agent = agent
         self.agent_type = agent_type
-        self.gs_tau = gs_tau
 
+        assert max_len >= 1, "Cannot have a max_len below 1"
+        self.max_len = max_len
+
+        self.embed_size = embed_size
         self.vocab_size = vocab_size
 
         if agent_type in ['rf', 'gs']:
             self.vocab_size = vocab_size
             self.lex_f = nn.Linear(hidden_size, vocab_size)
         if agent_type == 'gs': 
-            self.gs_tau = gs_tau
+            self.temp = temp
+            self.embedding = nn.Linear(vocab_size, embed_size)
+            self.sos_embedding = nn.Parameter(torch.zeros(embed_size))
+            if not trainable_temp:
+                self.temperature = temp
+            else:
+                self.temperature = torch.nn.Parameter(
+                    torch.tensor([temp]), requires_grad=True
+                )
+            self.straight_through = straight_through
+
+        self.cell = None
+        cell = cell.lower()
+
+        if cell == "rnn":
+            self.cell = nn.RNNCell(input_size=embed_size, hidden_size=hidden_size)
+        elif cell == "gru":
+            self.cell = nn.GRUCell(input_size=embed_size, hidden_size=hidden_size)
+        elif cell == "lstm":
+            self.cell = nn.LSTMCell(input_size=embed_size, hidden_size=hidden_size)
+        else:
+            raise ValueError(f"Unknown RNN Cell: {cell}")
 
     def forward(self, x, aux_input=None, warm_up: bool=True):
         output = self.agent(x, aux_input, finetune=not warm_up)
@@ -38,7 +67,7 @@ class LexiconSenderWrapper(nn.Module):
             h, loss = output
             return h, loss
 
-        h, _ = output
+        h = output
         if self.agent_type == 'continuous':
             return h
 
@@ -53,8 +82,34 @@ class LexiconSenderWrapper(nn.Module):
                     return F.one_hot(output, self.vocab_size).float()
             else:
                 return gumbel_softmax_sample(
-                    lex_logit, self.gs_tau, self.training, False
+                    lex_logit, self.temp, self.training, False
                 )
+            
+            # e_t = torch.stack([self.sos_embedding] * h.size(0))
+            # sequence = []
+
+            # for _ in range(self.max_len):
+            #     if isinstance(self.cell, nn.LSTMCell):
+            #         h_t, prev_c = self.cell(e_t, (h, prev_c))
+            #     else:
+            #         h_t = self.cell(e_t, h)
+                
+            #     step_logits = self.lex_f(h_t)
+            #     x = gumbel_softmax_sample(
+            #         step_logits, self.temperature, self.training, self.straight_through
+            #     )
+
+            #     h = h_t
+            #     e_t = self.embedding(x)
+            #     sequence.append(x)
+            
+            # sequence = torch.stack(sequence).permute(1, 0, 2)
+
+            # eos = torch.zeros_like(sequence[:, 0, :]).unsqueeze(1)
+            # eos[:, 0, 0] = 1
+            # sequence = torch.cat([sequence, eos], dim=1)
+
+            # return sequence
 
         elif self.agent_type == 'rf':
             lex_logit = self.lex_f(h)
@@ -101,15 +156,32 @@ class LexiconReceiverWrapper(nn.Module):
         agent: nn.Module,
         agent_type: str,  # continuous, gs, rf
         vocab_size: Optional[int],
+        embed_size: Optional[int],
         hidden_size: Optional[int],
+        cell: str = 'rnn'
     ):
         super().__init__()
         self.agent = agent
         self.agent_type = agent_type
 
+        self.cell = None
+        cell = cell.lower()
+
+        if cell == "rnn":
+            self.cell = nn.RNNCell(input_size=embed_size, hidden_size=hidden_size)
+        elif cell == "gru":
+            self.cell = nn.GRUCell(input_size=embed_size, hidden_size=hidden_size)
+        elif cell == "lstm":
+            self.cell = nn.LSTMCell(input_size=embed_size, hidden_size=hidden_size)
+        else:
+            raise ValueError(f"Unknown RNN Cell: {cell}")
+        
+        self.embed_size = embed_size
+
         if agent_type in ['vq', 'gs', 'rf']:
             self.vocab_size = vocab_size
             self.lex_f = nn.Linear(vocab_size, hidden_size)
+            self.embedding = nn.Linear(vocab_size, embed_size)
 
     def forward(self, message, input=None, aux_input=None, warm_up: bool=True):
         if self.agent_type == 'vq':
@@ -121,6 +193,31 @@ class LexiconReceiverWrapper(nn.Module):
             return self.agent(message, input, aux_input, finetune=not warm_up)
 
         elif self.agent_type == 'gs':
+            # outputs = []
+            # emb = self.embedding(message)
+
+            # prev_hidden = None
+            # prev_c = None
+
+            # # to get an access to the hidden states, we have to unroll the cell ourselves
+            # for step in range(message.size(1)):
+            #     e_t = emb[:, step, ...]
+            #     if isinstance(self.cell, nn.LSTMCell):
+            #         h_t, prev_c = (
+            #             self.cell(e_t, (prev_hidden, prev_c))
+            #             if prev_hidden is not None
+            #             else self.cell(e_t)
+            #         )
+            #     else:
+            #         h_t = self.cell(e_t, prev_hidden)
+
+            #     outputs.append(self.agent(h_t, input, aux_input))
+            #     prev_hidden = h_t
+
+            # outputs = torch.stack(outputs).permute(1, 0, 2)
+
+            # return outputs
+
             message = self.lex_f(message)
             return self.agent(message, input, aux_input, finetune=not warm_up)
 
