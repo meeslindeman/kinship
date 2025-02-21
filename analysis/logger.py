@@ -114,11 +114,10 @@ class ResultsCollector(core.Callback):
 
                 receiver_probs = interaction.receiver_output.exp()
                 if receiver_probs.dim() > 2:
-                    # averaging probabilities 
-                    receiver_probs = receiver_probs.mean(dim=1)
-                    predicted_label = receiver_probs.argmax(dim=1).item()
-                else:
-                    predicted_label = receiver_probs.argmax().item()
+                    msg_len = interaction.message_length
+                    receiver_probs = receiver_probs[:, msg_len.long()-1].squeeze(dim=1)
+                
+                predicted_label = receiver_probs.argmax().item()
                 correct = (predicted_label == labels.item())
 
                 total_correct += int(correct)
