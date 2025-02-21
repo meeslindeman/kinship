@@ -62,19 +62,14 @@ def get_game(opts: Options, num_node_features: int):
             sender,
             opts.mode,
             opts.vocab_size,
-            opts.embedding_size, 
             opts.hidden_size, 
-            opts.max_len, 
-            opts.gs_tau,
-            opts.sender_cell
+            opts.gs_tau
         )
         receiver_wrapper = LexiconReceiverWrapper(
             receiver,
             opts.mode,
             opts.vocab_size, 
-            opts.embedding_size,
-            opts.hidden_size,
-            opts.sender_cell
+            opts.hidden_size
         )
 
         if opts.mode == 'continuous':

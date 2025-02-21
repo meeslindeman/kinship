@@ -13,7 +13,7 @@ class Options:
     generations: int = 3 # Depricated: used for random graph generation
     padding_len: int = 80 # Depricated: used for topsim sequence generation
     edges_away: int = 3 # Depricated: used for random graph generation
-    prune_graph: bool = False # True for pruning graph to bfs tree (keep only paths from ego to other nodes)
+    prune_graph: bool = True # True for pruning graph to bfs tree (keep only paths from ego to other nodes)
     data_seed: int = 1
 
     # Game
@@ -26,7 +26,7 @@ class Options:
     hidden_size: int = 20 # default: 20
     sender_cell: str = 'gru' # 'rnn', 'gru', 'lstm'
     layer: str = 'rgcn' # 'gat', 'transform', 'rgcn'
-    max_len: int = 2 # default: 1
+    max_len: int = 1 # default: 1
     gs_tau: float = 1.5 # default: 1.0
 
     # Training
@@ -47,7 +47,7 @@ class Options:
     evaluation: bool = True
     eval_distractors: int = None
     eval_batch_size: int = 1
-    evaluation_interval: int = 2
+    evaluation_interval: int = 10
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
     language: str = 'dutch'
 
