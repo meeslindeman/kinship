@@ -1,8 +1,9 @@
 import datetime
+import uuid
 
 def sweep_config_init():
 
-    prefix = "deleteme"
+    prefix = "Fixed-Pruning-Sweep"
     timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
 
 
@@ -24,7 +25,7 @@ def sweep_config_init():
 
         #Seed
         'random_seed' : {
-            'values': [51,52,53,54,55]
+            'values': [int(uuid.uuid4().int % (2**32)) for _ in range(10)]
         },
         # Game
         'prune_graph' : {
@@ -41,7 +42,10 @@ def sweep_config_init():
             'values': [200],
         },
         'vocab_size':  {
-            'values': [100, 64, 32, 15]
+            'values': [128, 64, 32, 16]
+        },
+        'layer':  {
+            'values': ['rgcn']
         },
         # Training
         'mode':  {
@@ -51,7 +55,7 @@ def sweep_config_init():
             'values': [1.5]
         },
         'n_epochs':  {
-            'values': [200]
+            'values': [250]
         },
         'learning_rate': {
             'values': [1e-3]
@@ -60,7 +64,7 @@ def sweep_config_init():
             'values': [50]
         },
         'max_len':{
-            'values': [1,2,3]
+            'values': [2,3]
         }
 
     }

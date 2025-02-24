@@ -9,7 +9,7 @@ class Options:
     # Data
     root: str = 'data/'
     need_probs: str = 'uniform' # 'uniform', 'kemp', 'dutch -> see need prob plots
-    number_of_graphs: int = 5000 # default: 3200
+    number_of_graphs: int = 10000 # default: 3200
     generations: int = 3 # Depricated: used for random graph generation
     padding_len: int = 80 # Depricated: used for topsim sequence generation
     edges_away: int = 3 # Depricated: used for random graph generation
@@ -25,7 +25,7 @@ class Options:
     heads: int = 1 # default: 4
     hidden_size: int = 20 # default: 20
     sender_cell: str = 'gru' # 'rnn', 'gru', 'lstm'
-    layer: str = 'gat' # 'gat', 'transform', 'rgcn'
+    layer: str = 'rgcn' # 'gat', 'transform', 'rgcn'
     max_len: int = 1 # default: 1
     gs_tau: float = 1.5 # default: 1.0
 

@@ -131,7 +131,7 @@ if __name__ == "__main__":
     try:
         sweep_config = sweep_config_init()
         sweep_id = wandb.sweep(sweep_config, project='kinship')
-        wandb.agent(sweep_id, run_sweep_experiment, count=1)
+        wandb.agent(sweep_id, run_sweep_experiment)
     except BrokenPipeError:
         print('Failed to run sweep')
     finally:
