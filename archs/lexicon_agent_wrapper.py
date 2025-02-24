@@ -38,7 +38,7 @@ class LexiconSenderWrapper(nn.Module):
             h, loss = output
             return h, loss
 
-        h, _ = output
+        h = output
         if self.agent_type == 'continuous':
             return h
 

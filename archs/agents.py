@@ -54,7 +54,7 @@ class Sender(nn.Module):
             _, indices, commit_loss = self.vq_layer(output)
             output = F.one_hot(indices, self.vocab_size)
             return output, commit_loss
-        return output, None # batch_size x hidden_size
+        return output
 
 class Receiver(nn.Module):
     def __init__(self, num_node_features: int, opts: Options, layer: nn.Module=None):
@@ -76,7 +76,6 @@ class Receiver(nn.Module):
 
     def forward(self, message, _input, _aux_input, finetune: bool=False):
         data = _aux_input
-
         if finetune:
             with torch.no_grad():
                 h = self.layer(data)

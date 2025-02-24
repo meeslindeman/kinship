@@ -97,7 +97,6 @@ class ResultsCollector(core.Callback):
 
         with torch.no_grad():
             for batch in self.eval_loader:
-                # Unpack the batch
                 sender_input, labels, receiver_input, aux_input = batch
                 device = self.options.device
                 sender_input = sender_input.to(device)
@@ -105,19 +104,19 @@ class ResultsCollector(core.Callback):
                 aux_input = aux_input.to(device)
                 aux_input.evaluation = True
 
-                # Forward pass
                 loss, interaction = self.game.forward(sender_input, labels, receiver_input, aux_input)
 
-                # Get message
                 if self.options.mode == "rf":
-                    message = interaction.message.tolist()
+                    message = tuple(interaction.message)
                 else:
-                    message = interaction.message.argmax(dim=-1).tolist()
+                    message = interaction.message.argmax(dim=-1).squeeze().tolist() if interaction.message.dim() > 2 else interaction.message.argmax(dim=-1).tolist()
+                    message = tuple(message)
 
-                # Get the receiver output log_prop and compute probabilities
                 receiver_probs = interaction.receiver_output.exp()
-
-                # Check if the prediction is correct
+                if receiver_probs.dim() > 2:
+                    msg_len = interaction.message_length
+                    receiver_probs = receiver_probs[:, msg_len.long()-1].squeeze(dim=1)
+                
                 predicted_label = receiver_probs.argmax().item()
                 correct = (predicted_label == labels.item())
 
@@ -126,7 +125,6 @@ class ResultsCollector(core.Callback):
 
                 assert NODES[predicted_label] != 'Ego', f"{receiver_probs[0, predicted_label]}"
 
-                # Collect data per target
                 per_target_data.append({
                     'ego_node': aux_input.ego_node[0],
                     'target_node_idx': aux_input.target_node_idx[0].item(),

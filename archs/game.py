@@ -34,32 +34,59 @@ def get_game(opts: Options, num_node_features: int):
     sender.to(opts.device)
     receiver.to(opts.device)
 
-    sender_wrapper = LexiconSenderWrapper(
-        sender,
-        opts.mode,
-        opts.vocab_size, opts.hidden_size, opts.gs_tau
-    )
-    receiver_wrapper = LexiconReceiverWrapper(
-        receiver,
-        opts.mode,
-        opts.vocab_size, opts.hidden_size
-    )
-
-    if opts.mode == 'continuous':
-        game = LexiconSenderReceiverGS(sender_wrapper, receiver_wrapper, loss_nll)
-
-    elif opts.mode == 'vq':
-        game = LexiconSenderReceiverGS(sender_wrapper, receiver_wrapper, loss_nll)
-
-    elif opts.mode == 'gs':
-        game = LexiconSenderReceiverGS(sender_wrapper, receiver_wrapper, loss_nll)
-
-    elif opts.mode == 'rf':
-        game = LexiconSenderReceiverRF(
-            sender_wrapper, receiver_wrapper, loss_nll,
-            sender_entropy_coeff=0.01, receiver_entropy_coeff=0.01
+    if opts.max_len > 1:
+        sender_wrapper = core.RnnSenderGS(
+            agent=sender,
+            vocab_size=opts.vocab_size,
+            embed_dim=opts.embedding_size,
+            hidden_size=opts.hidden_size,
+            max_len=opts.max_len,
+            temperature=opts.gs_tau,
+            cell=opts.sender_cell
         )
+        receiver_wrapper = core.RnnReceiverGS(
+            agent=receiver,
+            vocab_size=opts.vocab_size,
+            embed_dim=opts.embedding_size,
+            hidden_size=opts.hidden_size,
+            cell=opts.sender_cell
+        )
+
+        if opts.mode == 'gs':
+            game = core.SenderReceiverRnnGS(sender_wrapper, receiver_wrapper, loss_nll)
+        else:
+            raise ValueError(f"Invalid wrapper: {opts.mode}")
+    
     else:
-        raise ValueError(f"Invalid wrapper: {opts.mode}")
+        sender_wrapper = LexiconSenderWrapper(
+            sender,
+            opts.mode,
+            opts.vocab_size,
+            opts.hidden_size, 
+            opts.gs_tau
+        )
+        receiver_wrapper = LexiconReceiverWrapper(
+            receiver,
+            opts.mode,
+            opts.vocab_size, 
+            opts.hidden_size
+        )
+
+        if opts.mode == 'continuous':
+            game = LexiconSenderReceiverGS(sender_wrapper, receiver_wrapper, loss_nll)
+
+        elif opts.mode == 'vq':
+            game = LexiconSenderReceiverGS(sender_wrapper, receiver_wrapper, loss_nll)
+
+        elif opts.mode == 'gs':
+            game = LexiconSenderReceiverGS(sender_wrapper, receiver_wrapper, loss_nll)
+
+        elif opts.mode == 'rf':
+            game = LexiconSenderReceiverRF(
+                sender_wrapper, receiver_wrapper, loss_nll,
+                sender_entropy_coeff=0.01, receiver_entropy_coeff=0.01
+            )
+        else:
+            raise ValueError(f"Invalid wrapper: {opts.mode}")
 
     return game
