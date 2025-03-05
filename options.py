@@ -27,11 +27,11 @@ class Options:
     sender_cell: str = 'gru' # 'rnn', 'gru', 'lstm'
     layer: str = 'rgcn' # 'gat', 'transform', 'rgcn'
     max_len: int = 2 # default: 1
-    gs_tau: float = 1.5 # default: 1.0
+    gs_tau: float = 1.0 # default: 1.0
 
     # Training
-    n_epochs: int = 1000
-    vocab_size: int = 100
+    n_epochs: int = 200
+    vocab_size: int = 64
     batch_size: int = 50
     random_seed: int = 42
     learning_rate: float = 1e-3
@@ -47,7 +47,7 @@ class Options:
     evaluation: bool = True
     eval_distractors: int = None
     eval_batch_size: int = 1
-    evaluation_interval: int = 2
+    evaluation_interval: int = 5
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
     language: str = 'dutch'
 
