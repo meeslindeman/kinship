@@ -1,12 +1,15 @@
 from typing import Any, List, Optional, Sequence, Union
 from sklearn.model_selection import train_test_split
-from options import Options
+
+from collections import Counter
+import torch
 
 import torch.utils.data
 from torch_geometric.data import Batch, Dataset
 from torch_geometric.data.data import BaseData
 from torch_geometric.data.datapipes import DatasetAdapter
 from torch_geometric.data.on_disk_dataset import OnDiskDataset
+from torch.utils.data import WeightedRandomSampler
 
 class Collater:
     def __init__(
@@ -47,6 +50,23 @@ class Collater:
         if isinstance(self.dataset, OnDiskDataset):
             return self(self.dataset.multi_get(batch))
         return self(batch)
+
+def compute_class_weights(dataset):
+    """
+    Compute inverse frequency weights for each class in the dataset.
+    """
+    # Count occurrences of each target class
+    target_counts = Counter(data.target_node_idx for data in dataset)
+    total_samples = sum(target_counts.values())
+
+    # Compute inverse frequency weights
+    class_weights = {cls: total_samples / count for cls, count in target_counts.items()}
+
+    # Normalize weights (convert to a list ordered by class index)
+    max_weight = max(class_weights.values())
+    class_weights = {cls: w / max_weight for cls, w in class_weights.items()}  # Normalize to [0,1]
+
+    return class_weights
 
 
 class DataLoader(torch.utils.data.DataLoader):
@@ -115,7 +135,23 @@ def create_eval_data(dataset):
 
 def get_loaders(opts, dataset):
     _, val_data = train_test_split(dataset, test_size=0.2, random_state=42)
-    train_loader = DataLoader(game_size=1, dataset=dataset, batch_size=opts.batch_size, shuffle=True)
+
+    print("Resampling:", opts.use_resampling)
+
+    if opts.use_resampling:
+        class_weights = compute_class_weights(dataset)
+
+        # Create a list of sample weights matching dataset order
+        sample_weights = [class_weights[data.target_node_idx] for data in dataset]
+
+        # Create a sampler that resamples data based on computed weights
+        sampler = WeightedRandomSampler(sample_weights, num_samples=len(dataset), replacement=True)
+
+        train_loader = DataLoader(game_size=1, dataset=dataset, batch_size=opts.batch_size, sampler=sampler)
+
+    else:
+        train_loader = DataLoader(game_size=1, dataset=dataset, batch_size=opts.batch_size, shuffle=True)
+
     val_loader = DataLoader(game_size=1, dataset=val_data, batch_size=opts.batch_size, shuffle=True)
 
     eval_data = create_eval_data(dataset)

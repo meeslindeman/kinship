@@ -37,10 +37,10 @@ class LexiconSenderWrapper(nn.Module):
             self.vocab_size = vocab_size
             self.lex_f = nn.Linear(hidden_size, vocab_size)
         if agent_type == 'gs': 
-            self.temp = temp
             self.embedding = nn.Linear(vocab_size, embed_size)
             self.sos_embedding = nn.Parameter(torch.zeros(embed_size))
             if not trainable_temp:
+                self.initial_temp = temp    
                 self.temperature = temp
             else:
                 self.temperature = torch.nn.Parameter(
@@ -82,34 +82,8 @@ class LexiconSenderWrapper(nn.Module):
                     return F.one_hot(output, self.vocab_size).float()
             else:
                 return gumbel_softmax_sample(
-                    lex_logit, self.temp, self.training, False
+                    lex_logit, self.temperature, self.training, False
                 )
-            
-            # e_t = torch.stack([self.sos_embedding] * h.size(0))
-            # sequence = []
-
-            # for _ in range(self.max_len):
-            #     if isinstance(self.cell, nn.LSTMCell):
-            #         h_t, prev_c = self.cell(e_t, (h, prev_c))
-            #     else:
-            #         h_t = self.cell(e_t, h)
-                
-            #     step_logits = self.lex_f(h_t)
-            #     x = gumbel_softmax_sample(
-            #         step_logits, self.temperature, self.training, self.straight_through
-            #     )
-
-            #     h = h_t
-            #     e_t = self.embedding(x)
-            #     sequence.append(x)
-            
-            # sequence = torch.stack(sequence).permute(1, 0, 2)
-
-            # eos = torch.zeros_like(sequence[:, 0, :]).unsqueeze(1)
-            # eos[:, 0, 0] = 1
-            # sequence = torch.cat([sequence, eos], dim=1)
-
-            # return sequence
 
         elif self.agent_type == 'rf':
             lex_logit = self.lex_f(h)
@@ -148,7 +122,8 @@ class LexiconSenderWrapper(nn.Module):
             return output, logit, entropy
 
         else:
-            not NotImplementedError()
+            raise NotImplementedError(f"Unknown agent type: {self.agent_type}")
+
 
 class LexiconReceiverWrapper(nn.Module):
     def __init__(
@@ -193,31 +168,6 @@ class LexiconReceiverWrapper(nn.Module):
             return self.agent(message, input, aux_input, finetune=not warm_up)
 
         elif self.agent_type == 'gs':
-            # outputs = []
-            # emb = self.embedding(message)
-
-            # prev_hidden = None
-            # prev_c = None
-
-            # # to get an access to the hidden states, we have to unroll the cell ourselves
-            # for step in range(message.size(1)):
-            #     e_t = emb[:, step, ...]
-            #     if isinstance(self.cell, nn.LSTMCell):
-            #         h_t, prev_c = (
-            #             self.cell(e_t, (prev_hidden, prev_c))
-            #             if prev_hidden is not None
-            #             else self.cell(e_t)
-            #         )
-            #     else:
-            #         h_t = self.cell(e_t, prev_hidden)
-
-            #     outputs.append(self.agent(h_t, input, aux_input))
-            #     prev_hidden = h_t
-
-            # outputs = torch.stack(outputs).permute(1, 0, 2)
-
-            # return outputs
-
             message = self.lex_f(message)
             return self.agent(message, input, aux_input, finetune=not warm_up)
 

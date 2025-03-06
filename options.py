@@ -8,7 +8,7 @@ class Options:
     """
     # Data
     root: str = 'data/'
-    need_probs: str = 'uniform' # 'uniform', 'kemp', 'dutch -> see need prob plots
+    need_probs: str = 'dutch' # 'uniform', 'kemp', 'dutch -> see need prob plots
     number_of_graphs: int = 5000 # default: 3200
     generations: int = 3 # Depricated: used for random graph generation
     padding_len: int = 80 # Depricated: used for topsim sequence generation
@@ -25,9 +25,14 @@ class Options:
     heads: int = 1 # default: 4
     hidden_size: int = 20 # default: 20
     sender_cell: str = 'gru' # 'rnn', 'gru', 'lstm'
-    layer: str = 'rgcn' # 'gat', 'transform', 'rgcn'
-    max_len: int = 2 # default: 1
-    gs_tau: float = 1.0 # default: 1.0
+    layer: str = 'gat' # 'gat', 'transform', 'rgcn'
+    max_len: int = 1 # default: 1
+
+    # GS
+    gs_tau: float = 2.0 # default: 1.0
+    gs_tau_min: float = 0.5 # default: 0.5
+    gs_tau_decay: float = 0.995 # default: 0.99
+    gs_annealing: bool = True
 
     # Training
     n_epochs: int = 200
@@ -35,6 +40,7 @@ class Options:
     batch_size: int = 50
     random_seed: int = 42
     learning_rate: float = 1e-3
+    use_resampling: bool = False
 
     # Logging
     compute_topsim: bool = False
