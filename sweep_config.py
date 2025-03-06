@@ -1,9 +1,9 @@
-import math
 import datetime
+import uuid
 
 def sweep_config_init():
 
-    prefix = "wAddedFeatures_"
+    prefix = "testing-time"
     timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
 
 
@@ -22,29 +22,30 @@ def sweep_config_init():
 
     #hyperparams to explore
     parameters_dict = {
-        #Seeds
-        'data_seed' : {
-            'values': [100, 101, 102, 103, 104, 105]
-        },
+
+        #Seed
         'random_seed' : {
-            'values': [41,42,43,44,45],
+            'values': [int(uuid.uuid4().int % (2**32)) for _ in range(10)]
         },
         # Game
         'prune_graph' : {
             'values': [True],
         },
         'distractors': {
-            'values': [35, 5],
+            'values': [5],
         },
         # Agents
         'embedding_size': {
-            'values': [200]
+            'values': [80]
         },
         'hidden_size': {
-            'values': [200],
+            'values': [80],
         },
         'vocab_size':  {
-            'values': [100, 64, 32, 15]
+            'values': [64, 32, 16]
+        },
+        'layer':  {
+            'values': ['rgcn']
         },
         # Training
         'mode':  {
@@ -54,7 +55,7 @@ def sweep_config_init():
             'values': [1.5]
         },
         'n_epochs':  {
-            'values': [200]
+            'values': [250]
         },
         'learning_rate': {
             'values': [1e-3]
@@ -63,8 +64,9 @@ def sweep_config_init():
             'values': [50]
         },
         'max_len':{
-            'values': [1]
+            'values': [2]
         }
+
     }
 
     sweep_config['metric'] = metric
