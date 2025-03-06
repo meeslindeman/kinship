@@ -16,6 +16,15 @@ class ResultsCollector(core.Callback):
         self.game = game
         self.eval_loader = eval_loader
         self.results = []
+        self.language = options.language
+        self.natural_language_profile = self._load_natural_languge_profile(self.language)
+        self.calc_topsim = core.TopographicSimilarity(
+            sender_input_distance_fn="edit",
+            message_distance_fn="edit",
+            compute_topsim_train_set=False,
+            compute_topsim_test_set=True,
+            is_gumbel=True
+        )
 
         self.print_train_loss = kwargs.get('print_train_loss', True)
 
@@ -25,10 +34,14 @@ class ResultsCollector(core.Callback):
         if epoch % self.options.evaluation_interval == 0:
             if self.options.evaluation:
                 eval_logs = self.evaluate(epoch)
-                train_metrics['eval_acc'] = eval_logs['accuracy']
                 train_metrics['evaluation'] = eval_logs['evaluation']
-                train_metrics['complexity'] = self._complexity(eval_logs['evaluation'])
-                train_metrics['information_loss'] = self._information_loss(eval_logs['evaluation'])
+                train_metrics['eval_acc'] = eval_logs['accuracy']
+
+                for ego in ['Bob', 'Alice']:
+                    results = self._compute_complexity_infoloss_accuracy_emerged_language(eval_logs['evaluation'], ego)
+                    train_metrics[f'eval_acc@{self.language}@{ego}'] = results['accuracy']
+                    train_metrics[f'complexity@{self.language}@{ego}'] = results['complexity']
+                    train_metrics[f'information_loss@{self.language}@{ego}'] = results['information_loss']
 
             if self.options.messages:
                 messages = self._messages_to_indices(logs.message)
@@ -42,6 +55,11 @@ class ResultsCollector(core.Callback):
 
     def on_validation_end(self, loss: float, logs: core.Interaction, epoch: int):
         test_metrics = self._aggregate_metrics(loss, logs, "test", epoch)
+        # leave out for now
+        # topsim = self.calc_topsim.compute_topsim(
+        #     torch.flatten(logs.sender_input, start_dim=1), 
+        #     logs.message.argmax(dim=-1) if self.topsim_calculator.is_gumbel else logs.message
+        # )
         self.results.append(test_metrics)
         self._print_to_console({k: v for k, v in test_metrics.items()})
 
@@ -79,7 +97,6 @@ class ResultsCollector(core.Callback):
 
         with torch.no_grad():
             for batch in self.eval_loader:
-                # Unpack the batch
                 sender_input, labels, receiver_input, aux_input = batch
                 device = self.options.device
                 sender_input = sender_input.to(device)
@@ -87,19 +104,19 @@ class ResultsCollector(core.Callback):
                 aux_input = aux_input.to(device)
                 aux_input.evaluation = True
 
-                # Forward pass
                 loss, interaction = self.game.forward(sender_input, labels, receiver_input, aux_input)
 
-                # Get message
                 if self.options.mode == "rf":
-                    message = interaction.message.tolist()
+                    message = tuple(interaction.message)
                 else:
-                    message = interaction.message.argmax(dim=-1).tolist()
+                    message = interaction.message.argmax(dim=-1).squeeze().tolist() if interaction.message.dim() > 2 else interaction.message.argmax(dim=-1).tolist()
+                    message = tuple(message)
 
-                # Get the receiver output log_prop and compute probabilities
                 receiver_probs = interaction.receiver_output.exp()
-
-                # Check if the prediction is correct
+                if receiver_probs.dim() > 2:
+                    msg_len = interaction.message_length
+                    receiver_probs = receiver_probs[:, msg_len.long()-1].squeeze(dim=1)
+                
                 predicted_label = receiver_probs.argmax().item()
                 correct = (predicted_label == labels.item())
 
@@ -108,7 +125,6 @@ class ResultsCollector(core.Callback):
 
                 assert NODES[predicted_label] != 'Ego', f"{receiver_probs[0, predicted_label]}"
 
-                # Collect data per target
                 per_target_data.append({
                     'ego_node': aux_input.ego_node[0],
                     'target_node_idx': aux_input.target_node_idx[0].item(),
@@ -128,66 +144,125 @@ class ResultsCollector(core.Callback):
         }
         return evaluation_results
 
-    def _complexity(self, counts):
-        need_probs = get_need_probs('dutch')
-        normalized_need_probs = {target: prob / sum(need_probs.values()) for target, prob in need_probs.items()}
+    def _load_natural_languge_profile(self, language):
+        return {
+            'need_probs': get_need_probs(language),
+            'target_message': None
+        }
 
-        targets = [element['target_node'] for element in counts]
-        messages = [tuple(element['message']) for element in counts]
+    def _estimate_prob_given_count(self, target_message):
+        p_target = self.natural_language_profile['need_probs']
+        targets = [element['target'] for element in target_message]
+        messages = [tuple(element['message']) for element in target_message]
 
-        count_target = defaultdict(float)  # for p(u) equivalent
-        count_msg_target = defaultdict(lambda: defaultdict(float))  # for p(w|u)
-        count_target_msg = defaultdict(lambda: defaultdict(float))  # for p(u|w)
+        count_target = defaultdict(lambda: 1e-10)  # for p(u) equivalent
+        count_msg_target = defaultdict(lambda: defaultdict(lambda: 1e-10))  # for p(w|u)
+        count_target_msg = defaultdict(lambda: defaultdict(lambda: 1e-10))  # for p(u|w)
 
         for target, message in zip(targets, messages):
-            count_target[target] += normalized_need_probs[target]
+            count_target[target] += p_target[target]
             count_msg_target[target][message] += 1
-            count_target_msg[message][target] += normalized_need_probs[target]
+            count_target_msg[message][target] += p_target[target]
 
-        p_target = defaultdict(float, {target: normalized_need_probs[target] for target in count_target.keys()})
-        p_message_given_target = defaultdict(lambda: defaultdict(float), {
-            target: defaultdict(float, {
+        p_message_given_target = defaultdict(lambda: defaultdict(lambda: 1e-10), {
+            target: defaultdict(lambda: 1e-10, {
                 message: count_msg_target[target][message] / sum(count_msg_target[target].values())
                 for message in count_msg_target[target].keys()
             })
             for target in count_msg_target.keys()
         })
 
-        p_target_given_message = defaultdict(lambda: defaultdict(float), {
-            message: defaultdict(float, {
+        p_target_given_message = defaultdict(lambda: defaultdict(lambda: 1e-10), {
+            message: defaultdict(lambda: 1e-10, {
                 target: count_target_msg[message][target] / sum(count_target_msg[message].values())
                 for target in count_target_msg[message].keys()
             })
             for message in count_target_msg.keys()
         })
+        return p_target, p_message_given_target, p_target_given_message
 
-        complexity = 0
-        for target, message in product(targets, messages):
-            complexity += (p_target[target] * p_message_given_target[target][message] *
-                        log2((p_target_given_message[message][target] + 1e-10) / p_target[target]))
+    def _compute_complexity_infoloss_accuracy(
+        self, target_message,
+        p_sender_message_given_target, p_sender_target_given_message,
+        p_receiver_target_given_message
+    ):
+        p_target = self.natural_language_profile['need_probs']
+        all_target = set(x['target'] for x in target_message)
+        all_message = set(x['message'] for x in target_message)
+        complexity = 0  # I(W,U) = sum_u_w p(u) x p(w|u) x log2( p(u|w) / p(u) )
 
-        return complexity
+        for u, w in product(all_target, all_message):
+            cplx = (
+                p_target[u] *
+                p_sender_message_given_target[u][w] *
+                log2(p_sender_target_given_message[w][u] / p_target[u] + 1e-10)
+            )
+            complexity += cplx
 
+        info_loss = 0  # -sum_u_w p(u) x p(w|u) x log2(p(u|w))
+        for u, w in product(all_target, all_message):
+            info_loss += (
+                -p_target[u] *
+                p_sender_message_given_target[u][w] *
+                log2(p_receiver_target_given_message[w][u] + 1e-10)
+            )
 
-    def _information_loss(self, counts):
-        targets = [element['target_node'] for element in counts]
-        ids = [element['target_node_idx'] for element in counts]
-        receiver_outputs = [output for element in counts for output in element['receiver_output']]
+        acc = 0  #
+        for u, w in product(all_target, all_message):
+            acc += (
+                p_target[u] *
+                p_sender_message_given_target[u][w] *
+                p_receiver_target_given_message[w][u]
+            )
 
-        need_probs = get_need_probs('dutch')
-        normalized_need_probs = {target: prob / sum(need_probs.values()) for target, prob in need_probs.items()}
+        return {
+            'complexity': complexity,
+            'information_loss': info_loss,
+            'accuracy': acc
+        }
 
-        information_loss = 0
+    def _compute_complexity_infoloss_accuracy_natural_language(self):
+        target_message = self.natural_language_profile['target_message']
+        (
+            p_target,
+            p_message_given_target,
+            p_target_given_message
+        ) = self._estimate_prob_given_count(target_message)
+        return self._compute_complexity_infoloss_accuracy(
+            target_message,
+            p_message_given_target, p_target_given_message,
+            p_target_given_message
+        )
 
-        for i, target in enumerate(targets):
-            receiver_output = log2(receiver_outputs[i][ids[i]] + 1e-10)
-            target_prob = normalized_need_probs[target]
+    def _compute_complexity_infoloss_accuracy_emerged_language(self, counts, ego):
+        target_message = [{
+            'target': x['target_node'],
+            'message': tuple(x['message'])
+        } for x in counts if x['ego_node'] == ego]
+        (
+            p_target,
+            p_sender_message_given_target,
+            p_sender_target_given_message
+        ) = self._estimate_prob_given_count(target_message)
 
-            cross_entropy = -target_prob * receiver_output
+        p_receiver_target_given_message = defaultdict(lambda: defaultdict(lambda: 1e-10))
+        for x in counts:
+            idx, u, w = x['target_node_idx'], x['target_node'], tuple(x['message'])
+            receiver_output = x['receiver_output'][0]
 
-            information_loss += cross_entropy
+            for uidx in range(len(receiver_output)):
+                p_receiver_target_given_message[w][NODES[uidx]] += max(1e-10, receiver_output[uidx])
 
-        return information_loss
+        for w in p_receiver_target_given_message.keys():
+            total = sum(p_receiver_target_given_message[w].values())
+            for u in p_receiver_target_given_message[w].keys():
+                p_receiver_target_given_message[w][u] /= total
+
+        return self._compute_complexity_infoloss_accuracy(
+            target_message,
+            p_sender_message_given_target, p_sender_target_given_message,
+            p_receiver_target_given_message
+        )
 
     def get_results(self):
         return self.results

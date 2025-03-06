@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import networkx as nx
-from graph.kemp_dataset import KempGraphDataset
-from graph.kemp_build import NODES
+from kemp_dataset import KempGraphDataset
+from kemp_build import NODES
 
 def draw_graph(data, nodes, save: bool = False, index: int = 0):
     plt.figure(figsize=(8, 6))
@@ -27,7 +27,7 @@ def draw_graph(data, nodes, save: bool = False, index: int = 0):
     def get_node_color(i, gender, ego_node, target_node):
         return 'tab:blue' if gender == 0 else 'tab:red'
 
-    node_colors = [get_node_color(i, gender, ego_node, target_node) for i, (gender, _, _) in enumerate(data.x.tolist())]
+    node_colors = [get_node_color(i, gender, ego_node, target_node) for i, (gender, _, _, _, _, _, _, _) in enumerate(data.x.tolist())]
 
     pos = nx.spring_layout(G, seed=42)
 
@@ -55,13 +55,15 @@ def draw_graph(data, nodes, save: bool = False, index: int = 0):
     plt.legend(handles=patches)
 
     if save:
-        plt.savefig(f"graph.png", dpi=300)
+        plt.savefig(f"normal.png", dpi=300)
         plt.close()
     else:
         plt.show()
 
-# Usage
+# from kemp_dataset import KempGraphDataset
 
-dataset = KempGraphDataset(root='data/kemp')
-data = dataset[0]
-draw_graph(data, NODES, save=True, index=0)
+# dataset = KempGraphDataset('data/uniform_seed1', prune=False)
+
+# data = dataset[0]
+
+# draw_graph(data, NODES, save=True, index=0)

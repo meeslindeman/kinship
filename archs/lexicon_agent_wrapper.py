@@ -16,11 +16,12 @@ class LexiconSenderWrapper(nn.Module):
         agent_type: str,  # continuous, gs, rf
         vocab_size: Optional[int],
         hidden_size: Optional[int],
-        gs_tau: int=1
+        gs_tau: float = 1.0
     ):
         super().__init__()
         self.agent = agent
         self.agent_type = agent_type
+        self.gs_tau = gs_tau
 
         self.vocab_size = vocab_size
 
@@ -37,7 +38,7 @@ class LexiconSenderWrapper(nn.Module):
             h, loss = output
             return h, loss
 
-        h, _ = output
+        h = output
         if self.agent_type == 'continuous':
             return h
 
@@ -65,8 +66,8 @@ class LexiconSenderWrapper(nn.Module):
                 output = distr.sample()
                 logit = distr.log_prob(output)
 
-                explore_chance = torch.rand(output.shape)
-                explore_output = torch.randint(low=0, high=self.vocab_size, size=output.shape)
+                explore_chance = torch.rand(output.shape).to(entropy.device)
+                explore_output = torch.randint(low=0, high=self.vocab_size, size=output.shape).to(entropy.device)
                 explore_entropy = torch.zeros_like(entropy)
                 explore_logit = torch.zeros_like(logit)
 

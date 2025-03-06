@@ -1,8 +1,10 @@
 import torch
 import random
 import numpy as np
+import torch_geometric
 from torch_geometric.data import Dataset
 from graph.kemp_build import get_graph, update_age, update_sex, prune_graph
+import os
 
 class KempGraphDataset(Dataset):
     def __init__(
@@ -18,12 +20,14 @@ class KempGraphDataset(Dataset):
         self.number_of_graphs = number_of_graphs
         self.need_probs = need_probs
         self.seed = seed
-        np.random.seed(seed)
+        self.prune = prune
+        
+        torch_geometric.seed_everything(self.seed)
 
         super(KempGraphDataset, self).__init__(root, transform, pre_transform)
         
         self.data = None
-        self.process(prune=prune)
+        self.process(prune=self.prune)
 
     @property
     def processed_file_names(self):
@@ -33,7 +37,21 @@ class KempGraphDataset(Dataset):
         return len(self.data)
 
     def get(self, idx):
-        return self.data[idx]
+        graph_data = self.data[idx]
+        if self.prune:
+            ego_node_idx = graph_data.ego_node_idx
+            pruned_graph = prune_graph(graph_data, ego_node_idx)
+
+            # Preserve attributes
+            pruned_graph.ego_node_idx = ego_node_idx
+            pruned_graph.target_node_idx = graph_data.target_node_idx
+            pruned_graph.target_node = graph_data.target_node
+            pruned_graph.ego_node = graph_data.ego_node
+            pruned_graph.pruned = True
+
+            return pruned_graph
+
+        return graph_data
 
     def generate_target(self, graph_data, node_map):
         ego_node_idx = graph_data.ego_node_idx
@@ -75,7 +93,8 @@ class KempGraphDataset(Dataset):
         update_sex(graph_data, ego_idx)
 
     def process(self, prune=False):
-        if True: # not os.path.isfile(self.processed_paths[0]):
+        # if self.data is None:
+        if not os.path.isfile(self.processed_paths[0]):
             self.data = []
             for i in range(self.number_of_graphs):
                 graph_data, node_map = get_graph()
@@ -94,8 +113,9 @@ class KempGraphDataset(Dataset):
 
                 # Update graph attributes based on the new ego node
                 self.update_graph_attributes(graph_data, ego_node_idx, node_map)
-                if prune:
-                    graph_data = prune_graph(graph_data, ego_node_idx)
+                # if prune:
+                #     graph_data = prune_graph(graph_data, ego_node_idx)
+                #     graph_data.pruned = True
                 graph_data.ego_node_idx = ego_node_idx
 
                 # Generate target node
