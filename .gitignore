@@ -91,6 +91,8 @@ dmypy.json
 data/
 results/
 wandb/
+data/
+results/
 .idea/
+.DS_Store
 kinship_dutch.xlsx
-

@@ -3,7 +3,7 @@ import uuid
 
 def sweep_config_init():
 
-    prefix = "testing-time"
+    prefix = "Fixed-Pruning-Sweep"
     timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
 
 
@@ -64,7 +64,7 @@ def sweep_config_init():
             'values': [50]
         },
         'max_len':{
-            'values': [2]
+        'values': [2,3]
         }
 
     }
